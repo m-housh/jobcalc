@@ -1,0 +1,60 @@
+.editorconfig
+.travis.yml
+
+# pyenv
+.python-version
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*/*/*/__pycache__/
+*.py[cod]
+*/.py[cod]
+*/*/.py[cod]
+*/*/*/.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit Test / Coverage
+htmlcov/
+.tox/
+.coverage
+.cache
+
+# docker
+docker-compose.yml
+.docker
+
+# Virtual Environment
+.env/
+.venv/
+venv/
+
+# Vim swap files
+*.swp
+*/*.swp
+*/*/*.swp
+*/*/*/*.swp
+

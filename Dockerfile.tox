@@ -1,0 +1,8 @@
+# Dockerfile for jobcalc
+#
+# This file is used to run tox tests on your package.
+FROM mhoush/tox
+
+ENV TERM xterm-256color
+
+CMD ["tox"]
