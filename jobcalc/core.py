@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Union, Iterable, Any
+from typing import Union, Iterable, Any, Dict
 import logging
 # import inspect
 import decimal
@@ -230,6 +230,7 @@ class Calculator(BaseCalculator):
         self.hours = []  # type: HoursList
         if hours:
             self.hours.append(hours)
+
         # check in the config for default hours to add.
         if self.config.default_hours != '0':
             self.hours.append(self.config.default_hours)
@@ -325,7 +326,7 @@ class Calculator(BaseCalculator):
         if hours > 0 and not rate > 0:
             # log a warning that hours have been set, but no hourly rate
             # has been set.
-            logger.warning(
+            logger.debug(
                 'hours: {}, are set but rate: {} has not been set'.format(
                     hours, rate)
             )
@@ -349,7 +350,13 @@ class Calculator(BaseCalculator):
             )
         '''
 
-    def update(self, *, append: bool=True, **kwargs) -> None:
+    def update(self, updates: Dict[str, Any]=None, append: bool=True, **kwargs
+               ) -> None:
+
+        if updates is not None and not isinstance(updates, dict):
+            raise TypeError("'{}' should be a dict.")
+        if updates is not None:
+            kwargs.update(updates)
 
         for key in kwargs:
             logger.debug(
@@ -381,7 +388,7 @@ class Calculator(BaseCalculator):
 #        when prompting for values that can have multiples.
 class TerminalCalculator(Calculator):
 
-    _prompts = ('margin', 'discount', 'hours', 'rate', 'deduction', 'cost')
+    _prompts = ('margin', 'discount', 'hours', 'deduction', 'cost', 'rate')
 
     def __init__(self, *, colors: ColorKey=None, **kwargs) -> None:
         kwargs.setdefault('config', TerminalConfig())
@@ -396,12 +403,12 @@ class TerminalCalculator(Calculator):
     '''
 
     def _multiple_display_header(self) -> str:
-        return "\nMultiples accepted, they can be seperated by '{}'\n".format(
+        return "\nMultiples accepted, they can be seperated by '{}'\n\n".format(
             self.config.prompt_seperator
         )
 
     def _single_display_header(self) -> str:
-        return '\nSingle value only.\n'
+        return '\nSingle value only.\n\n'
 
     def _prompt_for(self, attr: str, default: Any=None, type: Any=None,
                     confirm: bool=True, is_single: bool=False,
@@ -522,6 +529,44 @@ class TerminalCalculator(Calculator):
             # value we return.
             return prompt + 's'
 
+    def normalize(self, attr: str) -> str:
+        """A helper to normalize an attribute name, as most context's expect
+        the name to not be pluralized (except ``hours``), so we chop off the
+        's' if applicable.
+
+        :param attr:  The attribute name to normalize.
+
+        """
+        attr = str(attr)
+        if attr != 'hours' and attr.endswith('s'):
+            attr = attr[:-1]
+        return attr
+
+    def is_empty(self, attr: str) -> bool:
+        attr = self.normalize(attr)
+
+        if attr == 'rate':
+            # check rate against ``self.rate()``
+            return self.rate == 0
+        if attr == 'hours':
+            # check hours, which can also have ``default_hours`` that are
+            # loaded from an envrionment variable, so we check that as well.
+            # hours is considered empty if hours - default_hours == 0.
+            hours = self._hours()
+            default_hours = int(self.config.default_hours)
+            return (hours - default_hours) == 0
+        if attr == 'cost':
+            # check cost against ``self._costs()``.
+            return self._costs() == 0
+        # everything else get's checked in ``self.ctx``
+        with self.ctx() as ctx:
+            value = getattr(ctx, attr, None)
+            if value is None:
+                # if we are None, then someone is checking for unsupported
+                # attribute.
+                raise AttributeError(attr)
+            return value == 0
+
     @contextlib.contextmanager
     def prompt_for(self, prompt: str, **kwargs) -> PromptResponse:
         """A context manager that prompt's a user for input, and yields a
@@ -543,11 +588,7 @@ class TerminalCalculator(Calculator):
 
         yield func(**kwargs)
 
-    # TODO: clean this up/ refractor.
     def prompt_for_empty(self, strict: bool=False) -> None:
-
-        # holds values that we've prompted for.
-        updates = {}
 
         # we only want to display the headings once, so these
         # determine if we have displayed the headings or not already.
@@ -561,64 +602,101 @@ class TerminalCalculator(Calculator):
             logger.debug('ctx before prompts: {}, hours: {}, rate: {}'.format(
                 ctx, self._hours(), self.rate))
 
-            # ``self._prompts`` contain the valid prompt key's to use,
-            # and the order in which we prompt for empty's.
-            for prompt in self._prompts:
+        # ``self._prompts`` contain the valid prompt key's to use,
+        # and the order in which we prompt for empty's.
+        for prompt in self._prompts:
 
-                # ``current`` only get's set for hours in this context, if
-                # there are ``default_hours`` added from an environment
-                # variable.
-                current = None
+            # ``current`` only get's set for hours in this context, if
+            # there are ``default_hours`` added from an environment
+            # variable.
+            current = None
 
-                # determine the value to check if it's 0, if so,
-                # then we prompt
-                if prompt == 'hours':
-                    # hours can consist of default hours set by
-                    # environment variable ``JOBCALC_DEFAULT_HOURS``.
-                    # so we need to check if there is a value there and
-                    # subtract it from the hours set on an instance, to
-                    # decide if hours is empty or not.
-                    default_hours = int(self.config.default_hours)
-                    value = self._hours()
-                    if default_hours > 0:
-                        value = value - int(self.config.default_hours)
-                        current = default_hours
-                elif prompt == 'rate':
-                    # value for a rate prompt is ``self.rate``
-                    value = self.rate
-                elif prompt == 'cost':
-                    # value for cost prompt is ``self._costs``, which is the
-                    # sum of our ``costs`` for an instance.
-                    value = self._costs()
-                else:
-                    # else get the value from the ctx
-                    value = getattr(ctx, prompt, None)
+            # check if the value is empty or not.
+            if self.is_empty(prompt) is True:
+                # if it's empty and our prompt is for hours,
+                # set current, if applicable.
+                if prompt == 'hours' and int(self.config.default_hours) > 0:
+                    current = self.config.default_hours
 
-                if value == 0:
-                    # setup kwargs to pass to the ``prompt_for`` method.
-                    prompt_kwargs = dict(
-                        default='0',
-                        confirm=False,
-                        current=current,
-                        display_multiple_header=not multiple_heading_displayed,
-                        display_single_header=not single_heading_displayed
+                # set-up kwargs to be passed to ``prompt_for``
+                kwargs = dict(
+                    default='0',
+                    confirm=False,
+                    current=current,
+                    display_multiple_header=not multiple_heading_displayed,
+                    display_single_header=not single_heading_displayed
+                )
+
+                # prompt the user for input, and check the result.
+                with self.prompt_for(prompt, **kwargs) as result:
+                    logger.debug(
+                        'result from prompt: {}, key: {}: {}'.format(
+                            prompt, self.key_for_prompt(prompt), result)
                     )
 
-                    with self.prompt_for(prompt, **prompt_kwargs) as result:
-
-                        value = result.value
-                        multiple_heading_displayed = \
-                            result.multiple_heading_displayed
-                        single_heading_displayed = \
-                            result.single_heading_displayed
-
-                        # get the valid key to use for the prompt.
-                        key = self.key_for_prompt(prompt)
-                        # set the value for key in updates.
-                        updates[key] = value
-            # update ``self`` with the value(s) we've prompted for.
-            self.update(**updates)
+                    # update ``self`` with the value of the result.
+                    self.update(
+                        {self.key_for_prompt(prompt): result.value}
+                    )
+                    # set which/if heading's were displayed.
+                    multiple_heading_displayed = \
+                        result.multiple_heading_displayed
+                    single_heading_displayed = \
+                        result.single_heading_displayed
         # show the changes that have been applied if ``debug`` is True.
         if self.config.debug is True:
             with self.ctx(strict=False) as ctx:
-                logger.debug('ctx after prompts: {}'.format(ctx))
+                logger.debug(
+                    'ctx after prompts: {}, hours: {}, rate: {}'.format(
+                        ctx, self._hours(), self.rate)
+                )
+
+    def prompt_all(self) -> None:
+
+        if self.config.debug is True:
+            with self.ctx() as ctx:
+                logger.debug(
+                    'before prompts: {}, hours: {}, rate: {}'.format(
+                        ctx, self._hours(), self.rate)
+                )
+
+        multiple_heading_displayed = False
+        single_heading_displayed = False
+
+        for prompt in self._prompts:
+            # set current value up appropriately.
+            if prompt == 'cost':
+                current = self._costs()
+            elif prompt == 'rate':
+                current = self.rate
+            elif prompt == 'hours':
+                current = self._hours()
+            else:
+                with self.ctx(strict=False) as ctx:
+                    current = getattr(ctx, prompt, None)
+
+            # set kwargs to pass to ``prompt_for`` method.
+            kwargs = dict(
+                default='0',
+                current=current,
+                confirm=False,
+                display_multiple_header=not multiple_heading_displayed,
+                display_single_header=not single_heading_displayed
+            )
+
+            # prompt the user for input and use the result.
+            with self.prompt_for(prompt, **kwargs) as result:
+                # update self with the value.
+                self.update({self.key_for_prompt(prompt): result.value})
+                # set which/if we displayed any headings
+                multiple_heading_displayed = \
+                    result.multiple_heading_displayed
+                single_heading_displayed = \
+                    result.single_heading_displayed
+
+        if self.config.debug is True:
+            with self.ctx() as ctx:
+                logger.debug(
+                    'after prompts: {}, hours: {}, rate: {}'.format(
+                        ctx, self._hours(), self.rate)
+                )

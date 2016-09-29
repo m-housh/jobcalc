@@ -191,21 +191,8 @@ def formula(calculator, deduction, hours, rate, table, costs):
 @click.pass_obj
 def prompt_all(calculator, table, formula):
     """Prompt's for all values for the calculation."""
-    prompts = ('margin', 'discount', 'hours', 'rate', 'deduction', 'cost')
-    updates = {}
 
-    for prompt in prompts:
-        if prompt == 'hours' or prompt == 'rate':
-            key = prompt
-        else:
-            key = prompt + 's'
-
-        updates[key] = getattr(calculator, 'prompt_for_' + prompt)(
-            default='0',
-            confirm=False
-        ).value
-
-    calculator.update(**updates)
+    calculator.prompt_all()
 
     if table is True:
         calculator.formatters.append(TerminalFormatter())

@@ -71,7 +71,7 @@ ensure-test-image:  ## ensure's docker test image is built
 	echo "Test image already exists"
 
 test:   ## activate  ## run tests quickly with the default Python
-	py.test -vv --cov-report term-missing --cov jobcalc jobcalc
+	py.test -vv --cov-report term-missing --cov jobcalc
 	
 test-all: clean deactivate ## run tests on every Python version with tox
 	tox
