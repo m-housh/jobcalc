@@ -1,13 +1,6 @@
 jobcalc package
 ===============
 
-Subpackages
------------
-
-.. toctree::
-
-    jobcalc.test
-
 Submodules
 ----------
 

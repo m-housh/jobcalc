@@ -19,7 +19,9 @@ logger = logging.getLogger(__name__)
 @wrapt.decorator
 def parse_input_value(wrapped, instance, args, kwargs):
     """A decorator to parse the first arg with ``parse_input_string``, before
-    sending on to the wrapped function/method.
+    sending on to the wrapped function/method.  This method allows multiple
+    values to be passed into a command line option as a single string, split on
+    the default seperator ``';'``.
 
     Works properly with methods attached to classes or stand alone functions.
 
@@ -67,6 +69,9 @@ def check_env_dict(env_var: str=None, strict: bool=None):
     first arg to a true value. (either the value for the ``env_dict`` key or
     the value itself, if not a key in the ``env_dict``.
 
+    This decorator allows command line options to use named parameter's that
+    are mapped to values in an ``env_dict``.
+
     This will work the same whether wrapping a method attached to a class or
     a stand alone function.
 
@@ -82,18 +87,19 @@ def check_env_dict(env_var: str=None, strict: bool=None):
 
     :Example:
 
-        ```
-        $ export JOBCALC_DISCOUNTS='standard:5;deluxe:10;premium:15'
-        ```
+        .. code-block:: bash
 
-        ```
-        >>> @check_env_dict('JOBCALC_DISCOUNTS')
-        ... def decorated(value):
-        ...    print(value)
-        >>> decorated('standard')
-        '5'
-        >>> decorated('not_in_dict')
-        'not_in_dict'
+            $ export JOBCALC_DISCOUNTS='standard:5;deluxe:10;premium:15'
+
+        .. code-block:: python
+
+            >>> @check_env_dict('JOBCALC_DISCOUNTS')
+            ... def decorated(value):
+            ...    print(value)
+            >>> decorated('standard')
+            '5'
+            >>> decorated('not_in_dict')
+            'not_in_dict'
 
 
     """
@@ -235,6 +241,10 @@ class Percentage(decimal.Decimal):
             raise PercentageOutOfRange(value)
 
     def formatted_string(self) -> str:
+        """Return a formatted string for a percentage.  Rounded to the first
+        decimal place.
+
+        """
         return '{:.1f}%'.format(
             (self * 100).quantize(decimal.Decimal('.1'),
                                   rounding=decimal.ROUND_DOWN))
@@ -278,6 +288,17 @@ class Currency(decimal.Decimal):
         return decimal.Decimal.__new__(cls, str(value))
 
     def formatted_string(self) -> str:
+        """Return a formatted currency string.  This method uses
+        ``babel.numbers.format_currency`` using the ``config.CURRENCY_FORMAT``
+        and ``config.LOCALE`` variables that are set by the environment or
+        default values.  ('USD', 'en_US').
+
+        :Example:
+
+            >>> Currency('1000').formatted_string()
+            '$1,000.00'
+
+        """
         return babel.numbers.format_currency(self, CURRENCY_FORMAT,
                                              locale=LOCALE)
 
@@ -286,9 +307,22 @@ class Currency(decimal.Decimal):
 
 
 class BaseCurrencyType(click.ParamType):
+    """A custom ``click.ParamType`` used to convert values passed on the
+    command line to ``Currency`` instances.
+
+    """
 
     def convert(self, value: str, param: Any, ctx: Any
                 ) -> Union[Currency, Tuple[Currency]]:
+        """The method that does the actual conversion of values.  This method
+        is called by ``click`` during parsing of input values.
+
+        :param value:  The value(s) to be converted.  These can be either a
+                       string, or tuple of strings to convert.
+        :param param:  The command line parameter this attached to.
+        :param ctx:  The command line context.
+
+        """
 
         if hasattr(value, '__iter__') and len(value) == 1:
             value = value[0]
@@ -300,8 +334,20 @@ class BaseCurrencyType(click.ParamType):
 
 
 class BasePercentageType(click.ParamType):
+    """A custom ``click.ParamType`` used to convert values passed on the
+    command line to ``Percentage`` instances.
+
+    """
 
     def convert(self, value: str, param: Any, ctx: Any) -> Percentage:
+        """The method that does the actual conversion.  This method is called
+        directly from ``click`` during parsing of input values.
+
+        :param value:  A single string or iterable of strings to convert.
+        :param param:  The command line parameter this attached to.
+        :param ctx:  The command line context.
+
+        """
         if hasattr(value, '__iter__') and len(value) == 1:
             value = value[0]
 
@@ -318,17 +364,43 @@ class BasePercentageType(click.ParamType):
 
 
 class DeductionsType(BaseCurrencyType):
+    """A ``BaseCurrencyType`` that is used to convert command line values
+    to ``Currency`` instances.
+
+    Values can either be single items or multiples seperated ``';'``, if the
+    input is during an option to a command line command or ``' '`` if the input
+    is during a prompt.  These can be changed via environment variables.  See
+    ``config`` module for more information.
+
+    """
+
+
     name = 'deduction'
 
     @parse_input_value
     @check_env_dict('deductions')
     def convert(self, value: Union[str, Tuple[str]], param: Any, ctx: Any
                 ) -> Union[Currency, Tuple[Currency]]:
+        """Parses and converts value(s) to ``Currency`` instance(s).
 
+        :param value:  A string or tuple of strings to convert.
+        :param param:  The command line parameter this attached to.
+        :param ctx:  The command line context.
+
+        """
         return super().convert(value, param, ctx)
 
 
 class MarginsType(BasePercentageType):
+    """A ``BasePercentagType`` that is used to convert command line values
+    to ``Percentage`` instances.
+
+    Values can either be single items or multiples seperated ``';'``, if the
+    input is during an option to a command line command or ``' '`` if the input
+    is during a prompt.  These can be changed via environment variables.  See
+    ``config`` module for more information.
+
+    """
 
     name = 'margin'
 
@@ -336,10 +408,26 @@ class MarginsType(BasePercentageType):
     @check_env_dict('margins')
     def convert(self, value: Union[str, Tuple[str]], param: Any, ctx: Any
                 ) -> Union[Percentage, Tuple[Percentage]]:
+        """Parses and converts value(s) to ``Percentage`` instance(s).
+
+        :param value:  A string or tuple of strings to convert.
+        :param param:  The command line parameter this attached to.
+        :param ctx:  The command line context.
+
+        """
         return super().convert(value, param, ctx)
 
 
 class DiscountsType(BasePercentageType):
+    """A ``BasePercentagType`` that is used to convert command line values
+    to ``Percentage`` instances.
+
+    Values can either be single items or multiples seperated ``';'``, if the
+    input is during an option to a command line command or ``' '`` if the input
+    is during a prompt.  These can be changed via environment variables.  See
+    ``config`` module for more information.
+
+    """
 
     name = 'discount'
 
@@ -347,20 +435,68 @@ class DiscountsType(BasePercentageType):
     @check_env_dict('discounts')
     def convert(self, value: Union[str, Tuple[str]], param: Any, ctx: Any
                 ) -> Union[Percentage, Tuple[Percentage]]:
+        """Parses and converts value(s) to ``Percentage`` instance(s).
+
+        :param value:  A string or tuple of strings to convert.
+        :param param:  The command line parameter this attached to.
+        :param ctx:  The command line context.
+
+        """
+
         return super().convert(value, param, ctx)
 
 
 class CostsType(BaseCurrencyType):
+    """A ``BaseCurrencyType`` that is used to convert command line values
+    to ``Currency`` instances.
+
+    Values can either be single items or multiples seperated ``';'``, if the
+    input is during an option to a command line command or ``' '`` if the input
+    is during a prompt.  These can be changed via environment variables.  See
+    ``config`` module for more information.
+
+    """
 
     name = 'cost'
 
     @parse_input_value
     def convert(self, value: Union[str, Tuple[str]], param: Any, ctx: Any
                 ) -> Union[Currency, Tuple[Currency]]:
+        """Parses and converts value(s) to ``Currency`` instance(s).
+
+        :param value:  A string or tuple of strings to convert.
+        :param param:  The command line parameter this attached to.
+        :param ctx:  The command line context.
+
+        """
         return super().convert(value, param, ctx)
+
+
+class HoursType(click.ParamType):
+    name = 'hours'
+
+    @parse_input_value
+    def convert(self, value: Union[str, Tuple[str]], param: Any, ctx: Any
+                ) -> Union[int, Tuple[int]]:
+        """Parses and converts value(s) to ``int`` instance(s)
+
+        :param value:  A string or tuple of strings to convert.
+        :param param:  The command line parameter this attached to.
+        :param ctx:  The command line context.
+
+        """
+
+        if hasattr(value, '__iter__') and len(value) == 1:
+            value = value[0]
+
+        if isinstance(value, str):
+            return int(value)
+        return tuple(map(int, iter(value)))
+
 
 
 DEDUCTION = DeductionsType()
 MARGIN = MarginsType()
 DISCOUNT = DiscountsType()
 COSTS = CostsType()
+HOURS = HoursType()

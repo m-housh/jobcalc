@@ -18,8 +18,23 @@ logger = logging.getLogger(__name__)
 
 ColorContext = namedtuple('ColorContext', ('subtotal', 'margin', 'discount',
                                            'deduction', 'total'))
-TotaledContext = namedtuple('TotaledContext', ColorContext._fields)
+"""A named tuple used to hold colors for items when rendered.
 
+:param subtotal:  Color for subtotal's
+:param margin:  Color for margin's
+:param discount:  Color for discount's
+:param deduction:  Color for deduction's
+:param total:  Color for total's
+
+"""
+TotaledContext = namedtuple('TotaledContext', ColorContext._fields)
+"""Holds all the values to be rendered by a formatter.
+
+:param subtotal:  The subtotal of all the costs, hours, etc. for a calculation.
+:param discount:  The sum of all the percentage discounts for a calculation.
+:param deduction:  The sum of all the monetary deductions for a calculation.
+:param total:  The total of the calculation.
+"""
 
 DEFAULT_COLORS = ColorContext(
     subtotal='magenta',
@@ -28,6 +43,7 @@ DEFAULT_COLORS = ColorContext(
     deduction='red',
     total='green'
 )
+"""Default colors to use as the ``ColorContext``."""
 
 DEFAULT_FORMULA_STRING = """
 color key: {header}
@@ -39,26 +55,23 @@ color key: {header}
     (({subtotal} / (1 - {margin}) * (1 - {discount})) - {deduction}) = {total}
 )
 """
+"""A basic formula string to be formatted and rendered, to show the formula for
+a calculation.
+"""
 
 
 class BaseFormatter(object):
 
     @staticmethod
-    def colorize(*items) -> colorclass.Color:
+    def colorize(item: Any, color: str) -> colorclass.Color:
         """If an item is a ``Currency`` or ``Percentage``, then
         call it's ``formatted_string`` method, before colorizing the
         value.
 
-        :param items:  A 2 tuple (item, color).  Where item 1 can be a string,
-                       Currency, or Percentage, and item 2 (color) should be a
-                       string that can be converted to a ``colorclass.Color``.
-
-        :raises ValueError:  If items does not have enough items in it.
+        :param item:  A string, Currency, or Percentage to colorize.
+        :param color:  The color to use on the item.
 
         """
-
-        # let this raise a ``ValueError`` if it does not work.
-        item, color = items[0], items[1]
 
         if isinstance(item, (Currency, Percentage)):
             item = item.formatted_string()
@@ -66,16 +79,29 @@ class BaseFormatter(object):
 
     @staticmethod
     def render(calculator) -> str:
+        """The method all sub-classes should override to render a calculator.
+
+        :raises NotImplementedError:  If a sub-class does not implement this
+                                      method.
+
+        """
         raise NotImplementedError()
 
     @staticmethod
     @contextlib.contextmanager
     def totaled_ctx(calculator: Any) -> TotaledContext:
+        """A context manager that yields the ``TotaledContext`` for a
+        calculator.
+
+        """
         with calculator.ctx() as ctx:
             yield TotaledContext(*list(ctx) + [calculator.total()])
 
 
 class BasicFormatter(BaseFormatter):
+    """A basic formatter that renders the total as a formatted string.
+
+    """
     @staticmethod
     def render(calculator: Any) -> str:
         try:
@@ -126,7 +152,7 @@ class TerminalFormatter(terminaltables.AsciiTable, BaseFormatter):
                             be a ``BaseCalculator`` or sub-class.
 
         """
-        with calculator.ctx() as ctx:
+        with self.totaled_ctx(calculator) as ctx:
             headers = TotaledContext(*map(lambda x: x.upper(),
                                           TotaledContext._fields))
 
@@ -135,7 +161,6 @@ class TerminalFormatter(terminaltables.AsciiTable, BaseFormatter):
                                    zip(headers, self.colors)))
 
             body = list(ctx)
-            body.append(Currency(calculator.total()))
 
             if self.no_colors is False:
                 body = list(map(lambda items: self.colorize(*items),

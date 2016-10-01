@@ -1,33 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from typing import Dict, Any, Callable, Union, Tuple  # , Iterable
+from typing import Dict, Any, Callable, Union, Tuple
 import os
 import logging
-# from collections import namedtuple
 
 import click
 import colorclass
-# import wrapt
 
-from .exceptions import InvalidEnvString, NotCallableError  # , EnvDictNotFound
-# from .config import ENV_PREFIX
+from .exceptions import InvalidEnvString, NotCallableError
 
-# logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
-'''
-ENV_PREFIX = 'JOBCALC'
-"""The prefix to use for all environment variables associated with the app."""
-
-_Env = namedtuple('_Env', ['MARGINS', 'DISCOUNTS', 'DEDUCTIONS'])
-
-env = _Env(
-    MARGINS=ENV_PREFIX + '_MARGINS',
-    DISCOUNTS=ENV_PREFIX + '_DISCOUNTS',
-    DEDUCTIONS=ENV_PREFIX + '_DEDUCTIONS'
-)
-"""A named tuple with common environment variable keys."""
-'''
 
 
 def _return_input(value: Any) -> Any:
@@ -37,6 +19,9 @@ def _return_input(value: Any) -> Any:
 
 
 def _converter(cls):
+    """Helper to wrap a ``click.ParamType`` as a callback to convert values
+    to the appropriate type.
+    """
     if not hasattr(cls, 'convert'):
         raise TypeError('invalid object does not have a convert method')
 
@@ -55,9 +40,9 @@ def ensure_callback(callback: Callable[[Any], Any], error: bool=True
     that same value.
 
     :param callback:  The callback to check.
-    :param error:  Boolean to raise a ``NotCallableError`` if the callback
-                   is not callable.  Raises errors if ``True``.  Default is
-                   ``False``
+    :param error:  If ``True``, raise a ``NotCallableError`` if the callback
+                   is not callable. If ``False`` we will return a valid
+                   callback, rather than error.  Default is ``True``.
 
     :raises  NotCallableError:  If the callback is not callable and ``error``
                                 is ``True``.
@@ -73,41 +58,39 @@ def ensure_callback(callback: Callable[[Any], Any], error: bool=True
     # return a valid callable/callback
     return _return_input
 
-'''
-def get_env_var(name: str, default: Any=None, use_prefix: bool=True,
-                ensure_upper: bool=True, callback: Callable[[Any], Any]=None
-                ) -> Any:
-
-    if callback and not callable(callback):
-        raise TypeError('callback is not callable: {}'.format(callback))
-
-    name = str(name)
-
-    if use_prefix is True and ENV_PREFIX not in name:
-        name = ENV_PREFIX + '_' + name if not name.startswith('_') else \
-            ENV_PREFIX + name
-
-    value = os.environ.get(name.upper() if ensure_upper else name, None)
-    if value is None:
-        return default
-    return value if callback is None else callback(value)
-'''
-
 
 def dict_from_env_string(string: Union[str, dict], seperator: str=None,
                          divider: str=None, type: Callable[[Any], Any]=None
                          ) -> Dict[str, Any]:
+    """Creates a dict from a string, using a ``seperator`` to seperate the
+    items and a ``divider`` to distinguish key, value pairs.
+
+    :param string:  The string to create the dict from.
+    :param seperator:  The seperator to use to seperate items in the string.
+                       Defaults to ``';'``.  This can also be set by the
+                       environment variable ``JOBCALC_SEPERATOR``.
+    :param divider:  Divides key, value pairs.  Defaults to ``':'``.  This can
+                     also be set by the environment variable
+                     ``JOBCALC_DIVIDER``.
+    :param type:  A callback to use to convert all the values to a certain type.
+
+
+    :Example:
+
+        .. code-block:: python
+
+            >>> dict_from_env_string('standard:5;deluxe:10;premium:15')
+            {'standard': '5', 'deluxe': '10', 'premium': '15'}
+            >>> dict_from_env_string('standard:5;deluxe:10;premium:15',
+            ...                      type=Percentage)
+            {'standard': Percentage('0.5'), 'deluxe': Percentage('0.1'),
+             'premium': Percentage('0.15')}
+
+    """
 
     if string is None or string == '':
         return {}
     elif isinstance(string, dict):
-        # if we passed in an already parsed dict.
-        # this is, so that this can be used more easily as callback
-        # in ``get_env_var``.
-        #
-        # :example:
-        # get_env_var('SOME_ENV_VAR_THAT_COULD_BE_A_DICT', default={},
-        #             callback=parse_env_string)
         return string
 
     if type and not callable(type):
@@ -142,6 +125,34 @@ def dict_from_env_string(string: Union[str, dict], seperator: str=None,
 
 def parse_input_string(string: str, seperator: str=';',
                        convert: Callable[[Any], Any]=None) -> Tuple[Any]:
+    """Parses an input string that could have multiple values passed in
+    from the command line.
+
+    .. note::
+
+        This method always returns a tuple, which can be of length 1 or more.
+
+    :param string:  The input string to parse.
+    :param seperator:  The seperator used to seperate items.
+                       Defaults to ``';'``.
+    :param convert:  A callback that can be used to convert all the parsed
+                     values to a type. This can be a ``callable`` that recieves
+                     a single value and returns a single value, or we can
+                     also handle ``click.ParamType``'s.  Default is ``None``.
+
+
+    :Example:
+
+        .. code-block:: python
+
+            >>> parse_input_string('123;456')
+            ('123', '456')
+            >>> parse_input_string('123;456', convert=Currency)
+            (Currency('123'), Currency('456'))
+            >>> parse_input_string('123')
+            ('123', )
+
+    """
 
     # handle convert appropriately if it is a ``click.ParamType``,
     # then we use it's convert method.  This is useful if
@@ -160,19 +171,6 @@ def parse_input_string(string: str, seperator: str=';',
 
     # ``convert`` the items and return as a tuple of items``.
     return tuple(map(convert, split))
-
-'''
-# TODO:  This may be able to go away, don't think it's used anywhere.
-def check_in_env_dict(key: str, dict_name: str, type: Callable[[Any], Any]=None
-                      ) -> Any:
-    if type and not callable(type):
-        raise NotCallableError(type)
-
-    rv = get_env_var(dict_name, default={},
-                     callback=parse_env_string).get(key, key)
-
-    return type(rv) if type is not None else rv
-'''
 
 
 def flatten(*args, ignoretypes: Any=str):
@@ -208,8 +206,18 @@ def flatten(*args, ignoretypes: Any=str):
 def colorize(string: str, color: str) -> colorclass.Color:
     """Returns a colorized string.
 
+    .. seealso:: ``colorclass``
+
     :param string:  The string to colorize.
     :param color:  The color for the string.
+
+
+    :Example:
+
+        .. code-block:: python
+
+            >>> colorize('some string', 'red')
+            Color('\x1b[31msome string\x1b[39m')
 
     """
     return colorclass.Color('{' + str(color) + '}' + str(string) +
@@ -223,6 +231,8 @@ def bool_from_env_string(string: str) -> bool:
     'true', 'TRUE', 'TrUe', 1, '1' =  True
 
     Everything else is False.
+
+    :param string:  The string to convert to a bool.
 
     """
     if str(string).lower() == 'false' or str(string) == '':

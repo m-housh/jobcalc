@@ -41,10 +41,34 @@ PromptResponse = collections.namedtuple(
     'PromptRespone', ('value', 'multiple_heading_displayed',
                       'single_heading_displayed')
 )
+"""A namedtuple that represents the response to prompting for user input.
+
+:param value:  The parsed value from the user input.
+:param multiple_heading_displayed:  A boolean that indicates if we displayed
+                                    the multiple value heading during a prompt.
+:param single_heading_displayed:  A boolean that indicates if we displayed
+                                  the single value heading during a prompt.
+
+"""
 
 
 ColorKey = collections.namedtuple('ColorKey', ('margins', 'discounts', 'hours',
                                                'rate', 'deductions', 'costs'))
+"""A namedtuple that can be used to declare colors to be used when prompting
+for user input.
+
+.. note::
+
+    See ``colorclass`` for valid colors.
+
+:param margins: Color when prompting for margin.
+:param discounts:  Color when prompting for discounts.
+:param hours:  Color when prompting for hours.
+:param rate:  Color when prompting for rate.
+:param deductions:  Color when prompting for deductions.
+:param costs:  Color when prompting for costs.
+
+"""
 
 DEFAULT_COLOR_KEY = ColorKey(
     margins='blue',
@@ -54,6 +78,7 @@ DEFAULT_COLOR_KEY = ColorKey(
     deductions='red',
     costs='green'
 )
+"""The default colors to fallback to if none are declared for a calculator."""
 
 
 def calculate(subtotal: Union[Currency, str]='0',
@@ -86,27 +111,29 @@ def calculate(subtotal: Union[Currency, str]='0',
     )
 
 
-# TODO: Fix this doc string to reflect everything getting stored as lists.
-#       And added ``ignore_margins`` for ``subtotal`` to work if costs, include
-#       other calculator instances.  Maybe rename ``ignore_margins`` to
-#       something more appropriate.  (total_children, or subtotal_children)
 class BaseCalculator(object):
     """The ``BaseCalculator`` class know's how to take ``costs``, a ``margin``,
     a ``discount`` (percentage discount), and ``deductions`` and calculate
     a total with those items.
 
+    All items can be either single or iterables of items, but all get stored
+    as a list.  And the sum of that list of items makes up the total for a
+    given item.
+
     :param costs:  Either a single item or list of items that can be converted
-                   to a ``Currency``.  Whether a single item or a list, these
-                   are stored as a list, and the sum of that list is used
-                   as the subtotal for the calculation.
-    :param margins:  An item that can be converted to a ``Percentage``, used
-                    as the profit margin for the calculation.
-    :param discounts:  An item that can be converted to a ``Percentage``, used
-                      as a percentage discount for the calculation.
-    :param deductions:  Either a single item or list of items that can be
-                        converted to a ``Currency``.  Whether a single item or
-                        a list, these are stored as list, and the sum of that
-                        list is used as monetary deduction for the calculation.
+                   to a ``Currency``, used as the subtotal for a calculation.
+    :param margins:  An item or list of items that can be converted to a
+                     ``Percentage``, used as the profit margin for the
+                     calculation.
+    :param discounts:  An item or list of items that can be converted to a
+                       ``Percentage``, used as a percentage discount for
+                       the calculation.
+    :param deductions:  An item or list of items that can be converted to a
+                        ``Currency``, used as monetary deduction for the
+                        calculation.
+    :param ignore_margins:  A bool determining whether to ignore margins if
+                            any of the items in ``costs`` are other
+                            ``Calculator`` instances. Defaults to ``False``.
 
     """
 
@@ -117,7 +144,8 @@ class BaseCalculator(object):
                  ignore_margins: bool=None
                  ) -> None:
 
-        self.ignore_margins = ignore_margins
+        self.ignore_margins = bool(ignore_margins) if ignore_margins is not \
+            None else False
 
         self.costs = []  # type: CurrencyList
         if costs:
@@ -136,7 +164,20 @@ class BaseCalculator(object):
             self.discounts.append(discounts)
 
     @contextlib.contextmanager
-    def ctx(self, ignore_margins: bool=False) -> Context:
+    def ctx(self, ignore_margins: bool=None) -> Context:
+        """A context manager that yields a ``Context`` that is properly set
+        up to be used in a calculation.
+
+        :param ignore_margins:  A bool to determine whether to ignore margins
+                                in the ``subtotal`` if our ``costs`` include
+                                other ``Calculator`` instances.  This will
+                                fallback to ``self.ignore_margins`` if not
+                                supplied.
+
+        """
+        ignore_margins = bool(ignore_margins) if ignore_margins is not None \
+            else self.ignore_margins
+
         yield Context(
             subtotal=self.subtotal(ignore_margins=ignore_margins),
             margin=Percentage(sum(map(Percentage, flatten(self.margins)))),
@@ -144,23 +185,27 @@ class BaseCalculator(object):
             deduction=Currency(sum(map(Currency, flatten(self.deductions))))
         )
 
-    def subtotal(self, ignore_margins: bool=False) -> Currency:
+    def subtotal(self, ignore_margins: bool=None) -> Currency:
         """Calculate the subtotal of the ``costs``.  This is used because
         ``costs`` can also consist of other calculators, so we call either
         ``total`` or ``subtotal`` accordingly on those items.
 
         :param ignore_margins:  A boolean, if ``True``, then we call subtotal
                                 on child calculators, if it's ``False`` then
-                                we call total.  This can also be overriden,
-                                by the instance's ``ignore_margins`` attribute.
+                                we call total.  We fallback to
+                                ``self.ignore_margins`` if this is not passed
+                                in.
 
         """
+        ignore_margins = bool(ignore_margins) if ignore_margins is not None \
+            else self.ignore_margins
+
         totals = []
         for cost in flatten(self.costs):
             # call either ``subtotal`` or ``total`` appropriately, depending
             # on ``ignore_margins`` or ``self.ignore_margins`` setting.
             if isinstance(cost, BaseCalculator):
-                if ignore_margins is True or self.ignore_margins is True:
+                if ignore_margins is True:
                     # add the subtotal
                     totals.append(cost.subtotal(True))
                 else:
@@ -175,10 +220,10 @@ class BaseCalculator(object):
     def total(self) -> Currency:
         """Calculates the total for the current settings of the instance.
 
-        This method will convert all the items in the ``costs`` and
-        ``deductions`` to ``Currency`` instances, which can cause errors
-        if the items can not be converted.  The most common error will be
-        ``decimal.InvalidOperation``.
+        This method will convert all the items in to their appropriate type,
+        which can cause errors if the items can not be converted properly.
+        The most common error will be ``decimal.InvalidOperation``.
+
         """
         # convert all costs and deductions to Currency items, and let
         # errors propagate up.
@@ -191,6 +236,7 @@ class BaseCalculator(object):
         This is the method called in ``total``, so if a sub-class would
         like to implement a custom calculation, they can override this
         method.
+
         """
         return calculate(*args, **kwargs)
 
@@ -199,9 +245,10 @@ class Calculator(BaseCalculator):
     """Extends ``BaseCalculator``.  Adds the ability to attach formatters,
     to ``render`` a formatted output.  Adds ``hours`` and a ``rate`` option.
     The ``hours`` will be summed and multiplied by the ``rate`` and added to
-    the ``costs`` of the job.
+    the ``subtotal`` of the job.  Also adds the ability to pass in a
+    ``Config`` instance for common configuration of a ``Calculator``.
 
-    :param formatters:  A single or iterable of ``BaseFormatters`` to format
+    :param formatters:  A single or iterable of ``BaseFormatter``'s to format
                         the output.
     :param hours:  A single or iterable of items that can be converted to a
                    ``decimal.Decimal``.
@@ -238,14 +285,23 @@ class Calculator(BaseCalculator):
         self._rate = '0'
         self.rate = rate if rate is not None else self.config.rate
 
-    def subtotal(self, *args, **kwargs) -> Currency:
-        """Add's ``costs`` + (``rate`` * ``hours``) for the subtotal."""
+    def subtotal(self, **kwargs) -> Currency:
+        """Add's sum of ``costs`` + (``rate`` * ``hours``) for the subtotal.
+
+        :param kwargs:  Get passed to ``super``'s subtotal method.
+
+        """
         return Currency(
-            super().subtotal(*args, **kwargs) + (self.rate * self._hours())
+            super().subtotal(**kwargs) + (self.rate * self._hours())
         )
 
     @property
     def rate(self) -> decimal.Decimal:
+        """Used as the hourly rate for a calculator.  Defaults to '0'.  This
+        will not accept anything that is not greater or equal to 0 or anything
+        that can not be converted to a ``decimal.Decimal``.
+
+        """
         return decimal.Decimal(self._rate)
 
     @rate.setter
@@ -269,7 +325,7 @@ class Calculator(BaseCalculator):
         which will just output the ``total`` as a formatted currency string.
 
         :param seperator:  A string to use as the seperator. Defaults to
-                           '\n\n'.
+                           a double new-line.
 
         """
         formatters = list(flatten(self.formatters))
@@ -296,7 +352,8 @@ class Calculator(BaseCalculator):
         return decimal.Decimal(sum(map(decimal.Decimal, flatten(self.hours))))
 
     def _costs(self) -> decimal.Decimal:
-        """Helper to return the sum of the costs."""
+        """Helper to return the sum of the costs, not including hours and rate.
+        """
         return decimal.Decimal(sum(map(decimal.Decimal, flatten(self.costs))))
 
     @contextlib.contextmanager
@@ -310,8 +367,9 @@ class Calculator(BaseCalculator):
             be a ``decimal.InvalidOperation`` error.
 
 
-        :param strict:  Will cause an error to be raised if ``hours`` are
-                        set on an instance, but an ``rate`` has not been set.
+        :param strict:  If ``True`` an error will be raised if ``hours`` are
+                        set on an instance, but no ``rate`` has been set.
+                        Default is ``False``
 
         :raises HourlyRateError:  If ``strict`` is ``True`` and no hourly rate
                                   has been set.
@@ -319,7 +377,6 @@ class Calculator(BaseCalculator):
         """
         # these can raise errors, if the values can not be
         # converted to ``Decimal``'s
-        logger.debug('rate: {}'.format(self.rate))
         rate = decimal.Decimal(self.rate)
         hours = self._hours()
 
@@ -337,21 +394,30 @@ class Calculator(BaseCalculator):
         with super().ctx() as ctx:
             yield ctx
 
-        '''
-        with super().ctx() as ctx:
-            # calculate the new subtotal with our hours and rate,
-            # which can be 0 * 0
-            subtotal = Currency(ctx.subtotal + (hours * rate))
-            yield Context(
-                subtotal=subtotal,
-                margin=ctx.margin,
-                discount=ctx.discount,
-                deduction=ctx.deduction
-            )
-        '''
-
     def update(self, updates: Dict[str, Any]=None, append: bool=True, **kwargs
                ) -> None:
+        """A convenience method to update the common items of an instance.
+
+        :param updates:  Optional dict used for the updates where the
+                         keys are attribute names and the values are the items
+                         to set for the attribute.
+        :param append:  A bool, if ``True`` then we add the items to the
+                        existing attribute, if ``False`` then we remove any
+                        items already set with the new items.  Default is
+                        ``True``.
+        :param kwargs:  Same as ``updates``.
+
+        :Example:
+
+            >>> calc = Calculator()
+            >>> calc.update({'margins': '50'})
+            >>> assert calc.margins[-1] == '50'
+            # True
+            >>> calc.update(costs='123')
+            >>> assert calc.costs[-1] == '123'
+            # True
+
+        """
 
         if updates is not None and not isinstance(updates, dict):
             raise TypeError("'{}' should be a dict.")
@@ -377,10 +443,8 @@ class Calculator(BaseCalculator):
                 if key == 'rate':
                     self.rate = kwargs[key]
                 elif inconfig is False:
-                    logger.debug('inconfig is false')
                     setattr(self, key, kwargs[key])
                 else:
-                    logger.debug('inconfig')
                     setattr(self.config, key, kwargs[key])
 
 

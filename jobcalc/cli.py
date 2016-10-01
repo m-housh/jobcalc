@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
               help='A percent to use for the profit margin')
 @click.option('-d', '--discount', default='0', type=types.DISCOUNT,
               help='A percentage discount to apply')
-@click.option('-h', '--hours', default=0, type=int,
+@click.option('-h', '--hours', default='0', type=types.HOURS,
               help='Amount of hours for the job')
 @click.option('-r', '--rate', default=0, type=int,
               help='An hourly rate to use in the calculation.')
@@ -80,7 +80,7 @@ def main(ctx, margin, discount, rate, hours, allow_empty):
 @main.command()
 @click.option('-d', '--deduction', default='0', type=types.DEDUCTION,
               help='A monetary discount to subtract from the total')
-@click.option('-h', '--hours', default='0', type=int,
+@click.option('-h', '--hours', default='0', type=types.HOURS,
               help='Amount of hours for the job')
 @click.option('-r', '--rate', default=0, type=int,
               help='An hourly rate to use in the calculation.')
@@ -111,7 +111,7 @@ def total(calculator, deduction, hours, rate, costs):
               help='Show the formula as well.')
 @click.option('-d', '--deduction', default='0', type=types.DEDUCTION,
               help='A monetary discount to subtract from the total')
-@click.option('-h', '--hours', default='0', type=int,
+@click.option('-h', '--hours', default='0', type=types.HOURS,
               help='Amount of hours for the job')
 @click.option('-r', '--rate', default=0, type=int,
               help='An hourly rate to use in the calculation.')
@@ -151,7 +151,7 @@ def table(calculator, formula, deduction, hours, rate, costs):
 @main.command()
 @click.option('-d', '--deduction', default='0', type=types.DEDUCTION,
               help='A monetary discount to subtract from the total')
-@click.option('-h', '--hours', default='0', type=int,
+@click.option('-h', '--hours', default='0', type=types.HOURS,
               help='Amount of hours for the job')
 @click.option('-r', '--rate', default=0, type=int,
               help='An hourly rate to use in the calculation.')
