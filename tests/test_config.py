@@ -3,7 +3,9 @@
 
 import os
 
-from jobcalc.config import Config, TerminalConfig, env_strings
+import pytest
+
+from jobcalc.config import Config, TerminalConfig, env_strings, from_yaml
 
 
 def test_env_strings():
@@ -55,3 +57,38 @@ def test_TerminalConfig(test_env_setup):
     assert config.formula is True
     assert config.suppress is False
     assert config.prompt is False
+
+
+def test_TerminalConfig_dict_string(test_env_setup):
+    config = TerminalConfig()
+    string = config._dict_string(config.discounts)
+    assert 'standard:5;' in string
+    assert 'deluxe:10;' in string
+    assert 'premium:15;' in string
+
+    with pytest.raises(TypeError):
+        config._dict_string([])
+
+
+def test_from_yaml(yaml_config):
+    config = from_yaml(yaml_config)
+
+    assert config.seperator == '/'
+    assert config.divider == ';'
+    assert config.rate == '20'
+    assert config.default_hours == '2'
+    assert config.margins['fifty'] == 50
+    assert config.margins['forty'] == 40
+    assert config.discounts['standard'] == 5
+    assert config.discounts['deluxe'] == 10
+    assert config.discounts['premium'] == 15
+    assert config.deductions['one'] == 100
+    assert config.deductions['two'] == 200
+    assert config.debug is True
+    assert config.prompt is True
+    assert config.suppress is False
+    assert config.allow_empty is True
+    assert config.prompt_seperator == ';'
+
+    with pytest.raises(FileNotFoundError):
+        from_yaml('/invalid/path')

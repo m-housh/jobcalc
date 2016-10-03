@@ -218,12 +218,16 @@ class Test_TerminalCalculator(object):
         # we can also handle if someone accidentally asks to prompt for a plural
         # version, without raising errors.
         assert self.calc.key_for_prompt('margins') == 'margins'
+        assert self.calc.key_for_prompt('rates') == 'rate'
+
+        # accidentally not pluralizing 'hours'
+        assert self.calc.key_for_prompt('hour') == 'hours'
 
         # fail with invalid prompt.
         with pytest.raises(AttributeError):
             self.calc.key_for_prompt('invalid')
 
-    def test_TerminalCalculator_prompt_for_context_manager_fails(self):
+    def test_prompt_for_context_manager_fails(self):
         with pytest.raises(AttributeError):
             with self.calc.prompt_for('invalid'):  # pragma: no cover
                 pass

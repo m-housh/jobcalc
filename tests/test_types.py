@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
+
 import pytest
 import decimal
 
 import click
 
 from jobcalc.types import Percentage, Currency, DeductionsType, MarginsType, \
-    DiscountsType, CostsType, check_env_dict, parse_input_value
+    DiscountsType, CostsType, check_env_dict, parse_input_value, HoursType, \
+    ConfigType
 
 from jobcalc.exceptions import PercentageOutOfRange, EnvDictNotFound
 from jobcalc.config import env_strings as env
@@ -56,6 +59,9 @@ def test_check_env_dict(test_env_setup):
 
         invalid_decorated()
 
+    os.environ['JOBCALC_DISCOUNTS'] = \
+        'standard:5;deluxe:10;premium:15;default:deluxe'
+
     # test with a single value.
     @check_env_dict(env.discounts)
     def works(value):
@@ -63,6 +69,7 @@ def test_check_env_dict(test_env_setup):
 
     assert works('deluxe') == '10'
     assert works(('standard', 'deluxe', 'premium')) == ('5', '10', '15')
+    assert works('0') == '10'
 
 
 def test_Percentage():
@@ -151,3 +158,16 @@ def test_CostsType():
         (Currency('123'), Currency('456'))
 
     assert costs.convert('123', None, None) == Currency('123')
+
+
+def test_HoursType():
+    hours = HoursType()
+    assert hours.convert('10;20', None, None) == \
+        (decimal.Decimal('10'), decimal.Decimal('20'))
+    assert hours.convert('20', None, None) == decimal.Decimal('20')
+
+
+def test_ConfigType():
+    config = ConfigType()
+    with pytest.raises(click.BadParameter):
+        config.convert('/invalid/path', None, None)

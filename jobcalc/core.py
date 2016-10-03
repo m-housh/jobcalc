@@ -29,11 +29,21 @@ HoursList = Iterable[Union[str, int, Iterable[Union[str, int]]]]
 
 Context = collections.namedtuple('Context', ('subtotal', 'margin',
                                              'discount', 'deduction'))
-"""A namedtuple that represents the args for the ``calculate`` function.
-Consists of a ``subtotal``, ``margin``, ``discount``, and ``deduction``.
+"""A namedtuple that represents the args for the :py:meth:`calculate` function.
 
 If these values are set properly then you can call ``calculate(*context)``.
 and the values will be unpacked in the correct order.
+
+:param subtotal:  The subtotal for the calculation.
+:param margin:  The margin for the calculation
+:param discount:  The percentage discount for the calculation.
+:param deduction:  The monetary deduction for the calculation.
+
+Example::
+
+    >>> ctx = Context(subtotal='123', margin='50', discount='10', deduction='0')
+    >>> calculate(*ctx).formatted_string()
+    '$221.40'
 
 """
 
@@ -43,10 +53,10 @@ PromptResponse = collections.namedtuple(
 )
 """A namedtuple that represents the response to prompting for user input.
 
-:param value:  The parsed value from the user input.
-:param multiple_heading_displayed:  A boolean that indicates if we displayed
+:param value: The parsed value from the user input.
+:param multiple_heading_displayed: A boolean that indicates if we displayed
                                     the multiple value heading during a prompt.
-:param single_heading_displayed:  A boolean that indicates if we displayed
+:param single_heading_displayed: A boolean that indicates if we displayed
                                   the single value heading during a prompt.
 
 """
@@ -88,16 +98,16 @@ def calculate(subtotal: Union[Currency, str]='0',
               ) -> Currency:
     """Calculates a total based on the parameters.  Returned as a ``Currency``.
 
-    :param subtotal:  An item that can be converted to a ``Currency`` to be used
+    :param subtotal: An item that can be converted to a ``Currency`` to be used
                       for the calculation. This would be the sum of all the job
                       costs, materials, hours, etc.
-    :param margin:  An item that can be converted to a ``Perentage`` to be used
+    :param margin: An item that can be converted to a ``Perentage`` to be used
                     as the profit margin for the calculation.  Default is 0.
-    :param multiplier:  An item that can be converted to a ``Percentage`` to
+    :param multiplier: An item that can be converted to a ``Percentage`` to
                         be used as a percentage discount in the calculation.
                         This discount comes off after the profit margin has
                         been calculated.  Default is 0.
-    :param deduction:  An item that can be converted to a ``Currency`` to be
+    :param deduction: An item that can be converted to a ``Currency`` to be
                        used as a monetary discount in the calculation.  This
                        comes off after the profit margin has be calculated and
                        any other percentage discounts have been taken off.
@@ -121,15 +131,16 @@ class BaseCalculator(object):
     given item.
 
     :param costs:  Either a single item or list of items that can be converted
-                   to a ``Currency``, used as the subtotal for a calculation.
+                   to a :py:class:`Currency`, used as the subtotal for a
+                   calculation.
     :param margins:  An item or list of items that can be converted to a
-                     ``Percentage``, used as the profit margin for the
+                     :py:class:`Percentage`, used as the profit margin for the
                      calculation.
     :param discounts:  An item or list of items that can be converted to a
-                       ``Percentage``, used as a percentage discount for
+                       :py:class:`Percentage`, used as a percentage discount for
                        the calculation.
     :param deductions:  An item or list of items that can be converted to a
-                        ``Currency``, used as monetary deduction for the
+                        :py:class:`Currency`, used as monetary deduction for the
                         calculation.
     :param ignore_margins:  A bool determining whether to ignore margins if
                             any of the items in ``costs`` are other
@@ -188,7 +199,7 @@ class BaseCalculator(object):
     def subtotal(self, ignore_margins: bool=None) -> Currency:
         """Calculate the subtotal of the ``costs``.  This is used because
         ``costs`` can also consist of other calculators, so we call either
-        ``total`` or ``subtotal`` accordingly on those items.
+        :py:meth:`total` or :py:meth:`subtotal` accordingly on those items.
 
         :param ignore_margins:  A boolean, if ``True``, then we call subtotal
                                 on child calculators, if it's ``False`` then
@@ -232,8 +243,8 @@ class BaseCalculator(object):
 
     @staticmethod
     def calculate(*args, **kwargs) -> Currency:
-        """Just attaches the ``calculate`` function as a staticmethod.
-        This is the method called in ``total``, so if a sub-class would
+        """Just attaches the :py:func:`calculate` function as a staticmethod.
+        This is the method called in :py:meth:`total`, so if a sub-class would
         like to implement a custom calculation, they can override this
         method.
 
@@ -242,19 +253,19 @@ class BaseCalculator(object):
 
 
 class Calculator(BaseCalculator):
-    """Extends ``BaseCalculator``.  Adds the ability to attach formatters,
-    to ``render`` a formatted output.  Adds ``hours`` and a ``rate`` option.
-    The ``hours`` will be summed and multiplied by the ``rate`` and added to
-    the ``subtotal`` of the job.  Also adds the ability to pass in a
-    ``Config`` instance for common configuration of a ``Calculator``.
+    """Extends :py:class:`BaseCalculator`.  Adds the ability to attach
+    formatters, to ``render`` a formatted output.  Adds ``hours`` and a ``rate``
+    option. The ``hours`` will be summed and multiplied by the ``rate`` and
+    added to the ``subtotal`` of the job.  Also adds the ability to pass in a
+    :py:class:`Config` instance for common configuration of a ``Calculator``.
 
-    :param formatters:  A single or iterable of ``BaseFormatter``'s to format
-                        the output.
+    :param formatters:  A single or iterable of :py:class:`BaseFormatter`'s to
+                        format the output.
     :param hours:  A single or iterable of items that can be converted to a
                    ``decimal.Decimal``.
     :param rate:  An single item that can be converted to a ``decimal.Decimal``
                   that represents an hourly rate.
-    :param config:  A ``Config`` instance to use for values, either set
+    :param config:  A :py:class:`Config` instance to use for values, either set
                     or loaded from the environment.
 
     """
@@ -321,8 +332,9 @@ class Calculator(BaseCalculator):
         """Return a string output of all the formatters for an instance.
         Joined by the seperator.
 
-        If no formatters have been set, then we fall back to ``BasicFormatter``,
-        which will just output the ``total`` as a formatted currency string.
+        If no formatters have been set, then we fall back to
+        :py:class`BasicFormatter`, which will just output the
+        :py:meth:`total` as a formatted currency string.
 
         :param seperator:  A string to use as the seperator. Defaults to
                            a double new-line.
@@ -358,7 +370,7 @@ class Calculator(BaseCalculator):
 
     @contextlib.contextmanager
     def ctx(self, strict: bool=False) -> Context:
-        """Return a properly configured ``Context`` to be used.
+        """Return a properly configured :py:class:`Context` to be used.
 
         .. note::
 
@@ -368,7 +380,7 @@ class Calculator(BaseCalculator):
 
 
         :param strict:  If ``True`` an error will be raised if ``hours`` are
-                        set on an instance, but no ``rate`` has been set.
+                        set on an instance, but no :py:attr:`rate` has been set.
                         Default is ``False``
 
         :raises HourlyRateError:  If ``strict`` is ``True`` and no hourly rate
@@ -407,7 +419,7 @@ class Calculator(BaseCalculator):
                         ``True``.
         :param kwargs:  Same as ``updates``.
 
-        :Example:
+        Example::
 
             >>> calc = Calculator()
             >>> calc.update({'margins': '50'})
@@ -448,16 +460,30 @@ class Calculator(BaseCalculator):
                     setattr(self.config, key, kwargs[key])
 
 
-# TODO:  Add a prompt seperator environment/config setting. To be used
-#        when prompting for values that can have multiples.
+# TODO: Add an error if colors does not convert to a ``ColorKey``
 class TerminalCalculator(Calculator):
+    """Extends :py:class:`Calculator` for use in the command line interface.
 
-    _prompts = ('margin', 'discount', 'hours', 'deduction', 'cost', 'rate')
+    :param colors: A 6 tuple or :py:class:`ColorKey` of colors
+    :param kwargs: Extra args to pass to :py:class:``Calculator``
 
-    def __init__(self, *, colors: ColorKey=None, **kwargs) -> None:
+    """
+
+    # the valid prompt key's and the order we want to prompt
+    _prompts = (
+        # multiple values accepted
+        'margin', 'discount', 'hours', 'deduction', 'cost',
+
+        # single values accepted
+        'rate'
+    )
+
+    def __init__(self, *, colors: Union[Iterable[str], ColorKey, None]=None,
+                 **kwargs) -> None:
         kwargs.setdefault('config', TerminalConfig())
         super().__init__(**kwargs)
-        self.colors = colors if colors is not None else DEFAULT_COLOR_KEY
+        self.colors = ColorKey(*colors) if colors is not None else \
+            DEFAULT_COLOR_KEY
 
     '''
     @staticmethod
@@ -467,6 +493,9 @@ class TerminalCalculator(Calculator):
     '''
 
     def _multiple_display_header(self) -> str:
+        """Formats and returns the header shown when prompting for multiple
+        values from the user.
+        """
         return "\nMultiples accepted, they can be seperated by '{}'\n\n".format(
             self.config.prompt_seperator
         )
@@ -475,8 +504,8 @@ class TerminalCalculator(Calculator):
         return '\nSingle value only.\n\n'
 
     def _prompt_for(self, attr: str, default: Any=None, type: Any=None,
-                    confirm: bool=True, is_single: bool=False,
-                    current: Any=None, display_multiple_header: bool=True,
+                    is_single: bool=False, current: Any=None,
+                    display_multiple_header: bool=True,
                     display_single_header: bool=True
                     ) -> PromptResponse:
         """A helper to prompt a user for extra information for an attribute.
@@ -550,30 +579,123 @@ class TerminalCalculator(Calculator):
 
     prompt_for_cost = functools.partialmethod(_prompt_for,
                                               'costs', type=COSTS)
+    """Prompt the user for cost(s) for the calculation.
+
+    :param default:  Optional value to use as default for no input.
+    :param current: Optional value to display as the current value.
+    :param is_single: If input is single or accepts multiple values.
+    :param type:  A type to convert the value(s) to.
+    :param display_multiple_header:  If ``True`` then show the multiple value
+                                     header.
+    :param display_single_header:  If ``True`` then show the single value
+                                   header.
+
+    :rtype:  PromptResponse
+    """
 
     prompt_for_margin = functools.partialmethod(_prompt_for,
                                                 'margins', type=MARGIN)
+    """Prompt the user for margin(s) for the calculation.
+
+    :param default:  Optional value to use as default for no input.
+    :param current: Optional value to display as the current value.
+    :param is_single: If input is single or accepts multiple values.
+    :param type:  A type to convert the value(s) to.
+    :param display_multiple_header:  If ``True`` then show the multiple value
+                                     header.
+    :param display_single_header:  If ``True`` then show the single value
+                                   header.
+
+    :rtype:  PromptResponse
+    """
 
     prompt_for_discount = functools.partialmethod(_prompt_for,
                                                   'discounts', type=DISCOUNT)
+    """Prompt the user for discount(s) for the calculation.
+
+    :param default:  Optional value to use as default for no input.
+    :param current: Optional value to display as the current value.
+    :param is_single: If input is single or accepts multiple values.
+    :param type:  A type to convert the value(s) to.
+    :param display_multiple_header:  If ``True`` then show the multiple value
+                                     header.
+    :param display_single_header:  If ``True`` then show the single value
+                                   header.
+
+    :rtype:  PromptResponse
+    """
 
     prompt_for_deduction = functools.partialmethod(_prompt_for,
                                                    'deductions',
                                                    type=DEDUCTION)
+    """Prompt the user for deduction(s) for the calculation.
+
+    :param default:  Optional value to use as default for no input.
+    :param current: Optional value to display as the current value.
+    :param is_single: If input is single or accepts multiple values.
+    :param type:  A type to convert the value(s) to.
+    :param display_multiple_header:  If ``True`` then show the multiple value
+                                     header.
+    :param display_single_header:  If ``True`` then show the single value
+                                   header.
+
+    :rtype:  PromptResponse
+    """
 
     prompt_for_hours = functools.partialmethod(_prompt_for,
                                                'hours', type=decimal.Decimal)
+    """Prompt the user for hour(s) for the calculation.
+
+    :param default:  Optional value to use as default for no input.
+    :param current: Optional value to display as the current value.
+    :param is_single: If input is single or accepts multiple values.
+    :param type:  A type to convert the value(s) to.
+    :param display_multiple_header:  If ``True`` then show the multiple value
+                                     header.
+    :param display_single_header:  If ``True`` then show the single value
+                                   header.
+
+    :rtype:  PromptResponse
+    """
 
     prompt_for_rate = functools.partialmethod(_prompt_for,
                                               'rate', type=decimal.Decimal,
-                                              confirm=False, is_single=True)
+                                              is_single=True)
+    """Prompt the user for a rate for the calculation.
+
+    :param default:  Optional value to use as default for no input.
+    :param current: Optional value to display as the current value.
+    :param is_single: If input is single or accepts multiple values.
+    :param type:  A type to convert the value(s) to.
+    :param display_multiple_header:  If ``True`` then show the multiple value
+                                     header.
+    :param display_single_header:  If ``True`` then show the single value
+                                   header.
+
+    :rtype:  PromptResponse
+    """
 
     def key_for_prompt(self, prompt: str) -> str:
         """A helper to return the correct key (attribute name) to use for
         a prompt.
 
+        This is the opposite of the :py:meth:`normalize` method.  In which
+        it ensures the return value is pluralized for most cases as that's
+        the key that can be used in the :py:meth:`update` method for an
+        instance.
+
         This is helpful when making multiple prompts that save their values
         in a dict, that later is used to update the attributes on an instance.
+
+       :param prompt:  The attribute the prompt is for.
+
+        Example::
+
+            >>> calc = TerminalCalculator()
+            >>> calc.key_for_prompt('discount')
+            'discounts'
+            >>> calc.key_for_prompt('rates') # handle accidental plural's
+            'rate'
 
         """
         prompt = str(prompt)
@@ -582,6 +704,9 @@ class TerminalCalculator(Calculator):
             # used the plural form.
             # chop of the 's' and check again.
             prompt = prompt[:-1]
+        elif prompt not in self._prompts and not prompt.endswith('s'):
+            # try adding an 's' to see what happens.
+            prompt += 's'
 
         if prompt not in self._prompts:
             raise AttributeError(prompt)
@@ -598,6 +723,9 @@ class TerminalCalculator(Calculator):
         the name to not be pluralized (except ``hours``), so we chop off the
         's' if applicable.
 
+        This is also helpful if using :py:meth:`prompt_for` method, to make
+        sure the name for the prompt is correct.
+
         :param attr:  The attribute name to normalize.
 
         """
@@ -607,6 +735,16 @@ class TerminalCalculator(Calculator):
         return attr
 
     def is_empty(self, attr: str) -> bool:
+        """Determines if an attribute is considered empty, or equal to
+        '0'.
+
+        If there are default hours set by an environment variable, then
+        hours are considered empty if the sum of (hours - default_hours) are
+        '0'.
+
+        :param attr:  The name of the attribute to check.
+
+        """
         attr = self.normalize(attr)
 
         if attr == 'rate':
@@ -636,6 +774,19 @@ class TerminalCalculator(Calculator):
         """A context manager that prompt's a user for input, and yields a
         ``PromptResponse``.
 
+        Valid prompts are 'margin', 'discount', 'deduction', 'cost', 'hours',
+        and 'rate'.  We will also do/ call the right method if use the plural
+        form of prompt (ex. 'margins').
+
+        :param prompt:  The attribute to prompt for (ex. 'margin')
+        :param kwargs:  They get passed to the prompt_for_{prompt} command.
+
+        Example::
+
+            >>> calc = TerminalCalculator()
+            >>> with calc.prompt_for('margin', default='0') as result:
+            ...    calc.update(margins=result.value)
+
         """
         prompt = str(prompt)
         if prompt not in self._prompts and prompt.endswith('s'):
@@ -652,12 +803,17 @@ class TerminalCalculator(Calculator):
 
         yield func(**kwargs)
 
-    def prompt_for_empty(self, strict: bool=False) -> None:
+    def prompt_for_empty(self) -> None:
+        """Prompt the user for all the values that are determined to
+        be empty or '0', and add them to instance appropriately.
+
+        """
 
         # we only want to display the headings once, so these
         # determine if we have displayed the headings or not already.
         multiple_heading_displayed = False
         single_heading_displayed = False
+        strict = False
 
         # if ``strict`` is True, then errors get raised if ``hours`` have
         # been set with no ``rate`` set.
@@ -685,7 +841,6 @@ class TerminalCalculator(Calculator):
                 # set-up kwargs to be passed to ``prompt_for``
                 kwargs = dict(
                     default='0',
-                    confirm=False,
                     current=current,
                     display_multiple_header=not multiple_heading_displayed,
                     display_single_header=not single_heading_displayed
@@ -716,6 +871,10 @@ class TerminalCalculator(Calculator):
                 )
 
     def prompt_all(self) -> None:
+        """Prompt the user for all input's, also showing the current value, and
+        add the values to this instance appropriately.
+
+        """
 
         if self.config.debug is True:
             with self.ctx() as ctx:
@@ -743,7 +902,6 @@ class TerminalCalculator(Calculator):
             kwargs = dict(
                 default='0',
                 current=current,
-                confirm=False,
                 display_multiple_header=not multiple_heading_displayed,
                 display_single_header=not single_heading_displayed
             )

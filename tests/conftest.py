@@ -3,12 +3,49 @@
 
 import os
 import logging
+import tempfile
 
 import pytest
+import yaml
 
 from jobcalc.config import env_strings as env
 
 logger = logging.getLogger(__name__)
+
+_config = """
+
+seperator: '/'
+divider: ';'
+rate: 20
+default_hours: 2
+margins:
+    fifty: 50
+    forty: 40
+discounts:
+    standard: 5
+    deluxe: 10
+    premium: 15
+deductions:
+    one: 100
+    two: 200
+debug: true
+prompt: true
+suppress: false
+allow_empty: true
+prompt_seperator: ';'
+"""
+
+
+@pytest.yield_fixture(scope='session')
+def yaml_config():
+    tmp_file, path = tempfile.mkstemp()
+
+    with open(tmp_file, 'w') as stream:
+        yaml.dump(yaml.load(_config), stream)
+
+    yield path
+
+    os.remove(path)
 
 
 def _clean_up_env():

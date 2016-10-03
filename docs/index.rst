@@ -15,6 +15,7 @@ Contents:
    installation
    usage
    screenshots
+   api
    contributing
    history
 

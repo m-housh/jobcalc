@@ -1,12 +1,34 @@
 # -*- coding: utf-8 -*-
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Union, Any
 import os
+import sys
 import logging
 from collections import namedtuple
 
+import yaml
+
 from .utils import dict_from_env_string, bool_from_env_string
-from . import debug as DEBUG
+
+DEBUG = bool_from_env_string(
+    os.environ.get('DEBUG', os.environ.get('JOBCALC_DEBUG', 'false'))
+)
+
+if DEBUG is True:  # pragma: no cover
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.DEBUG,
+        format='%(levelname)s - (%(filename)s::%(funcName)s):msg: %(message)s'
+    )
+else:  # pragma: no cover
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.INFO,
+        format='%(levelname)s: %(message)s'
+    )
+
+logger = logging.getLogger(__name__)
+logger.debug('In debug mode.')
 
 logger = logging.getLogger(__name__)
 
@@ -208,3 +230,52 @@ class TerminalConfig(Config):
         if value is None:
             return default
         return bool_from_env_string(value)
+
+    def _dict_string(self, dic: Dict[str, Any]) -> str:
+
+        if not isinstance(dic, dict):
+            raise TypeError('{} should be a dict'.format(dic))
+
+        rv = ''
+
+        for key, value in dic.items():
+            rv += '{key}{divider}{value}{seperator}'.format(
+                key=key,
+                divider=self.divider,
+                value=value,
+                seperator=self.seperator
+            )
+
+        return rv
+
+    def setup_env(self) -> None:
+        """Set's up the environment and exposes values to the environment
+        that are needed by other external methods.
+
+        This is useful if the config is loaded from a file.
+
+        """
+
+        dicts = ('margins', 'deductions', 'discounts')
+
+        for key in dicts:
+            logger.debug('setting env attribute for: {}'.format(key))
+            os.environ.setdefault(getattr(env_strings, key),
+                                  self._dict_string(getattr(self, key)))
+
+        os.environ.setdefault(env_strings.seperator, self.seperator)
+        os.environ.setdefault(env_strings.divider, self.divider)
+
+
+
+
+def from_yaml(path: str, cls: Union[Config, TerminalConfig]=TerminalConfig
+              ) -> Config:
+
+    if not os.path.isfile(path):
+        raise FileNotFoundError(path)
+
+    with open(str(path)) as stream:
+        data = yaml.load(stream)
+
+    return cls(**data)

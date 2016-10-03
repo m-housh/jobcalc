@@ -89,7 +89,7 @@ coverage: ## check code coverage quickly with the default Python
 		coverage html
 		$(BROWSER) htmlcov/index.html
 
-docs: ## generate Sphinx HTML documentation, including API docs
+docs: install  ## generate Sphinx HTML documentation, including API docs
 	rm -f docs/jobcalc.rst
 	rm -f docs/modules.rst
 	sphinx-apidoc -o docs/ jobcalc

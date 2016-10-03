@@ -181,9 +181,17 @@ def test_TerminalCalc_prompt_for_context_manager(runner):
     def test_terminal_calc():
         calc = TerminalCalculator()
         # testing that prompt_for works with plural form as well.
-        with calc.prompt_for('margins', default='0', confirm=False) as result:
+        with calc.prompt_for('margins', default='0') as result:
             click.echo(result.value)
 
     result = runner.invoke(test_terminal_calc, input='20\n')
     assert result.exception is None
     assert "Percentage('0.2')" in result.output
+
+
+def test_with_config_file(runner, yaml_config):
+    result = runner.invoke(main, ['--config', yaml_config, '--margin',
+                                  'fifty', '--discount', 'deluxe', 'total',
+                                  '--deduction', 'one', '123', '456'])
+    assert result.exception is None
+    assert "$1,014.20" in result.output

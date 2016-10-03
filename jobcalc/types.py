@@ -10,7 +10,8 @@ import babel.numbers
 
 from .utils import parse_input_string
 from .exceptions import PercentageOutOfRange, EnvDictNotFound
-from .config import Config, env_strings, CURRENCY_FORMAT, LOCALE
+from .config import Config, env_strings, CURRENCY_FORMAT, LOCALE, \
+    TerminalConfig, from_yaml
 
 # logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ def parse_input_value(wrapped, instance, args, kwargs):
 
     Works properly with methods attached to classes or stand alone functions.
 
-    :Example:
+    Example::
 
         >>> @parse_input_value
         ... def decorated(values):
@@ -48,7 +49,7 @@ def parse_input_value(wrapped, instance, args, kwargs):
         will always be a tuple, which can be of length 1, if there wasn't any
         values to split in the input string.
 
-        :Example:
+        Example::
 
             >>> @parse_input_value
             ... def decorated(value):
@@ -63,6 +64,8 @@ def parse_input_value(wrapped, instance, args, kwargs):
     return wrapped(*newargs, **kwargs)
 
 
+# TODO:  Lodk at if checking for a 'default' key in an env_dict
+#        is better elsewhere.  Possibly inside of a `Config` instance.
 def check_env_dict(env_var: str=None, strict: bool=None):
     """A decorator to check iterate over the first arg, checking if the values
     map to a key in an ``env_dict``, returning it's value if so. Parsing the
@@ -85,11 +88,12 @@ def check_env_dict(env_var: str=None, strict: bool=None):
                               was not found for ``env_var``.
 
 
-    :Example:
+    Example:
 
-        .. code-block:: bash
+        .. code-block:: console
 
             $ export JOBCALC_DISCOUNTS='standard:5;deluxe:10;premium:15'
+
 
         .. code-block:: python
 
@@ -143,6 +147,13 @@ def check_env_dict(env_var: str=None, strict: bool=None):
 
         if isinstance(args[0], str):
             # if only a single value was passed in
+            if args[0] == '0':
+                # check for a default key in the env_dict.
+                value = env_dict.get('default', args[0])
+                # make sure that 'default' is not mapped to another
+                # key in the env_dict
+                return env_dict.get(value, value)
+
             return env_dict.get(args[0], args[0])
 
         # if multiple values need to be checked, a list, tuple, etc.
@@ -185,7 +196,7 @@ class Percentage(decimal.Decimal):
         to a ``Percentage`` for the ``formatted_string`` method to
         work.
 
-        :Example:
+        Example::
 
             >>> p = Percentage('10')
             >>> repr(p)
@@ -202,7 +213,7 @@ class Percentage(decimal.Decimal):
             >>> x.formatted_string()
             '15.0%'
 
-    :10% Example:
+    10% Example::
 
         >>> Percentage('10').formatted_string()
         '10.0%'
@@ -293,7 +304,7 @@ class Currency(decimal.Decimal):
         and ``config.LOCALE`` variables that are set by the environment or
         default values.  ('USD', 'en_US').
 
-        :Example:
+        Example::
 
             >>> Currency('1000').formatted_string()
             '$1,000.00'
@@ -373,7 +384,6 @@ class DeductionsType(BaseCurrencyType):
     ``config`` module for more information.
 
     """
-
 
     name = 'deduction'
 
@@ -473,12 +483,22 @@ class CostsType(BaseCurrencyType):
 
 
 class HoursType(click.ParamType):
+    """A ``click.ParamType`` that is used to convert command line values
+    to ``decimal.Decimal`` instances.
+
+    Values can either be single items or multiples seperated ``';'``, if the
+    input is during an option to a command line command or ``' '`` if the input
+    is during a prompt.  These can be changed via environment variables.  See
+    ``config`` module for more information.
+
+    """
+
     name = 'hours'
 
     @parse_input_value
     def convert(self, value: Union[str, Tuple[str]], param: Any, ctx: Any
-                ) -> Union[int, Tuple[int]]:
-        """Parses and converts value(s) to ``int`` instance(s)
+                ) -> Union[decimal.Decimal, Tuple[decimal.Decimal]]:
+        """Parses and converts value(s) to ``decimal.Decimal`` instance(s)
 
         :param value:  A string or tuple of strings to convert.
         :param param:  The command line parameter this attached to.
@@ -490,9 +510,22 @@ class HoursType(click.ParamType):
             value = value[0]
 
         if isinstance(value, str):
-            return int(value)
-        return tuple(map(int, iter(value)))
+            return decimal.Decimal(value)
+        return tuple(map(decimal.Decimal, iter(value)))
 
+
+class ConfigType(click.ParamType):
+    name = 'config'
+
+    def convert(self, value: str, param: Any, ctx: Any) -> TerminalConfig:
+        try:
+            config = from_yaml(str(value))
+        except FileNotFoundError as exc:
+            self.fail(exc)
+
+        config.setup_env()
+
+        return config
 
 
 DEDUCTION = DeductionsType()
@@ -500,3 +533,4 @@ MARGIN = MarginsType()
 DISCOUNT = DiscountsType()
 COSTS = CostsType()
 HOURS = HoursType()
+CONFIG = ConfigType()

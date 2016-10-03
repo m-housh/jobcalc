@@ -9,7 +9,7 @@ import click
 from . import types
 from .core import TerminalCalculator
 from .formatters import FormulaFormatter, TerminalFormatter
-from .config import ENV_PREFIX, TerminalConfig
+from .config import ENV_PREFIX, TerminalConfig, from_yaml
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +28,11 @@ logger = logging.getLogger(__name__)
 @click.option('-a', '--allow-empty', is_flag=True, default=False,
               envvar=ENV_PREFIX + '_ALLOW_EMPTY',
               help='Option to prompt for empty values.')
+@click.option('-c', '--config', type=types.CONFIG, is_eager=True,
+              envvar=ENV_PREFIX + '_CONFIG', nargs=1,
+              help='Path to a config file for the calculator')
 @click.pass_context
-def main(ctx, margin, discount, rate, hours, allow_empty):
+def main(ctx, margin, discount, rate, hours, allow_empty, config):
     """Calculate a job cost based on the settings.
 
     OPTIONS:
@@ -51,11 +54,12 @@ def main(ctx, margin, discount, rate, hours, allow_empty):
 
     """
 
-    # setup our config object.
-    config = TerminalConfig(
-        rate=rate,
-        allow_empty=allow_empty
-    )
+    if config is None:
+        # setup our config object.
+        config = TerminalConfig(
+            rate=rate,
+            allow_empty=allow_empty
+        )
 
     if ctx.invoked_subcommand is None and config.prompt is False:
         click.echo(ctx.get_help())

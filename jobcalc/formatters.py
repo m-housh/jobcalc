@@ -64,7 +64,7 @@ class BaseFormatter(object):
 
     @staticmethod
     def colorize(item: Any, color: str) -> colorclass.Color:
-        """If an item is a ``Currency`` or ``Percentage``, then
+        """If an item is a :py:class:`Currency` or :py:class:`Percentage`, then
         call it's ``formatted_string`` method, before colorizing the
         value.
 
@@ -104,6 +104,7 @@ class BasicFormatter(BaseFormatter):
     """
     @staticmethod
     def render(calculator: Any) -> str:
+        """Return the total as formatted currency string."""
         try:
             return calculator.total().formatted_string()
         except AttributeError as exc:
@@ -119,7 +120,7 @@ class TerminalFormatter(terminaltables.AsciiTable, BaseFormatter):
     """A ``terminaltables.AsciiTable``, that supports colors and
     a title.
 
-    :param colors:  A 5 tuple or ``ColorContext`` of strings that can
+    :param colors:  A 5 tuple or :py:class:`ColorContext` of strings that can
                     be used by to convert an item to a ``colorclass.Color``.
                     Defaults to (subtotal='magenta', margin='blue',
                     discount='yellow', deduction='red', total='green').
@@ -149,7 +150,7 @@ class TerminalFormatter(terminaltables.AsciiTable, BaseFormatter):
         """Set's up the table, and returns it as a string, to be rendered.
 
         :param calculator:  The calculator to create a table for.  Should
-                            be a ``BaseCalculator`` or sub-class.
+                            be a :py:class:`BaseCalculator` or sub-class.
 
         """
         with self.totaled_ctx(calculator) as ctx:

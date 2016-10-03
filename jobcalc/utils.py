@@ -7,7 +7,7 @@ import logging
 import click
 import colorclass
 
-from .exceptions import InvalidEnvString, NotCallableError
+from .exceptions import NotCallableError
 
 logger = logging.getLogger(__name__)
 
@@ -75,16 +75,14 @@ def dict_from_env_string(string: Union[str, dict], seperator: str=None,
     :param type:  A callback to use to convert all the values to a certain type.
 
 
-    :Example:
+    Example::
 
-        .. code-block:: python
-
-            >>> dict_from_env_string('standard:5;deluxe:10;premium:15')
-            {'standard': '5', 'deluxe': '10', 'premium': '15'}
-            >>> dict_from_env_string('standard:5;deluxe:10;premium:15',
-            ...                      type=Percentage)
-            {'standard': Percentage('0.5'), 'deluxe': Percentage('0.1'),
-             'premium': Percentage('0.15')}
+        >>> dict_from_env_string('standard:5;deluxe:10;premium:15')
+        {'standard': '5', 'deluxe': '10', 'premium': '15'}
+        >>> dict_from_env_string('standard:5;deluxe:10;premium:15',
+        ...                      type=Percentage)
+        {'standard': Percentage('0.5'), 'deluxe': Percentage('0.1'),
+         'premium': Percentage('0.15')}
 
     """
 
@@ -111,16 +109,27 @@ def dict_from_env_string(string: Union[str, dict], seperator: str=None,
     else:
         divider = str(divider)
 
-    split = (x.split(divider) for x in str(string).split(seperator))
+    split = list(x.split(divider) for x in str(string).split(seperator))
+    logger.debug('split: {}'.format(split))
 
-    try:
-        return {
-            key: type(value) for (key, value) in split
-        }
+    i = 0
+    for item in split:
+        if not len(item) == 2:
+            logger.debug('invalid item in env_string: {}'.format(item))
+            split.pop(i)
+        i += 1
+
+    logger.debug('split: {}'.format(split))
+
+    return {
+        key: type(value) for (key, value) in split
+    }
+    '''
     except ValueError:
         # string was invalid, declared a key without a value.
         logger.debug('invalid env string: {}'.format(string))
         raise InvalidEnvString(string)
+    '''
 
 
 def parse_input_string(string: str, seperator: str=';',
@@ -141,16 +150,14 @@ def parse_input_string(string: str, seperator: str=';',
                      also handle ``click.ParamType``'s.  Default is ``None``.
 
 
-    :Example:
+    Example::
 
-        .. code-block:: python
-
-            >>> parse_input_string('123;456')
-            ('123', '456')
-            >>> parse_input_string('123;456', convert=Currency)
-            (Currency('123'), Currency('456'))
-            >>> parse_input_string('123')
-            ('123', )
+        >>> parse_input_string('123;456')
+        ('123', '456')
+        >>> parse_input_string('123;456', convert=Currency)
+        (Currency('123'), Currency('456'))
+        >>> parse_input_string('123')
+        ('123', )
 
     """
 
@@ -181,7 +188,7 @@ def flatten(*args, ignoretypes: Any=str):
     :param ignoretypes:  A type or tuple of types to ignore (not flatten).
                          Default is ``str``.
 
-    :Example:
+    Example::
 
         >>> list(flatten([1, 2, [3, 4], [5, [6, 7], [8, 9]]]))
         [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -212,12 +219,10 @@ def colorize(string: str, color: str) -> colorclass.Color:
     :param color:  The color for the string.
 
 
-    :Example:
+    Example::
 
-        .. code-block:: python
-
-            >>> colorize('some string', 'red')
-            Color('\x1b[31msome string\x1b[39m')
+        >>> colorize('some string', 'red')
+        Color('\x1b[31msome string\x1b[39m')
 
     """
     return colorclass.Color('{' + str(color) + '}' + str(string) +

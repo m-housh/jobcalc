@@ -16,6 +16,7 @@ requirements = [
     'terminaltables>=3.0.0',
     'wrapt>=1.10.8',
     'babel>=2.3.4',
+    'pyyaml==3.11',
 ]
 
 test_requirements = [
