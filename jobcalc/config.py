@@ -58,7 +58,7 @@ _EnvStrings = namedtuple('_EnvStrings', ('seperator', 'divider', 'rate',
                                          'default_hours', 'margins',
                                          'discounts', 'deductions', 'prompt',
                                          'allow_empty', 'suppress', 'formula',
-                                         'prompt_seperator'
+                                         'prompt_seperator', 'config'
                                          )
                          )
 
@@ -78,8 +78,8 @@ class Config(object):
                        from an environment variable.  Defaults to ``';'``.
                        Can be set by ``JOBCALC_SEPERATOR``.  (ex.
                        'key1:value1;key2:value2;')
-    :param divider:  Used to divide a key, value pair parsed from an environment
-                     variable.  Defaults to ``':'``.  Can be set by
+    :param divider:  Used to divide a key, value pair parsed from an
+                     environment variable.  Defaults to ``':'``.  Can be set by
                      ``JOBCALC_DIVIDER``. (ex. 'key1:value1')
     :param rate:  An hourly rate to be used in calculations.  Defaults to '0'.
                   Can be set by ``JOBCALC_RATE``.
@@ -88,10 +88,10 @@ class Config(object):
                            ``JOBCALC_DEFAULT_HOURS``.
     :param margins:  A dict with named margins that can be used in a
                      calculation.  Defaults to ``{}``.  Can be set by
-                     ``JOBCALC_MARGINS`` using the ``seperator`` and ``divider``
-                     to distinguish the key, value pairs.  All values will get
-                     converted to a ``Percentage`` to be used as a profit
-                     margin. (ex: 'fifty:50;forty:40').
+                     ``JOBCALC_MARGINS`` using the ``seperator`` and
+                     ``divider`` to distinguish the key, value pairs.
+                     All values will get converted to a ``Percentage`` to be
+                     used as a profit margin. (ex: 'fifty:50;forty:40').
     :param discounts:  A dict with named discounts that can be used in a
                        calculation.  Defaults to ``{}``.  Can be set by
                        ``JOBCALC_DISCOUNTS`` using the ``seperator`` and
@@ -109,7 +109,6 @@ class Config(object):
                    ``False``.
 
     """
-
     def __init__(self, *, seperator: str=None, divider: str=None,
                  rate: str=None, default_hours: str=None,
                  margins: Dict[str, str]=None, discounts: Dict[str, str]=None,
@@ -210,8 +209,8 @@ class TerminalConfig(Config):
 
         # seperator to use for prompts that accept multiple values.
         # default is ' '
-        self.prompt_seperator = str(prompt_seperator) if prompt_seperator else \
-            self._get(env_strings.prompt_seperator, ' ')
+        self.prompt_seperator = str(prompt_seperator) if prompt_seperator \
+            else self._get(env_strings.prompt_seperator, ' ')
 
         # allow empty values.
         self.allow_empty = bool(allow_empty) if allow_empty else \
@@ -252,6 +251,9 @@ class TerminalConfig(Config):
         """Set's up the environment and exposes values to the environment
         that are needed by other external methods.
 
+        This will not override any values that are already set in the
+        environment.
+
         This is useful if the config is loaded from a file.
 
         """
@@ -267,11 +269,17 @@ class TerminalConfig(Config):
         os.environ.setdefault(env_strings.divider, self.divider)
 
 
-
-
 def from_yaml(path: str, cls: Union[Config, TerminalConfig]=TerminalConfig
-              ) -> Config:
+              ) -> Union[Config, TerminalConfig]:
+    """Create a :py:class:`Config` or :py:class:`TerminalConfig` from a yaml
+    file.
 
+    :param path:  The path to the file.
+    :param cls:  The class to return.  Default is :py:class:`TerminalConfig`
+
+    :raises FileNotFoundError:  If the path is not a valid file.
+
+    """
     if not os.path.isfile(path):
         raise FileNotFoundError(path)
 

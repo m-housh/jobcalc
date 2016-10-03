@@ -19,27 +19,6 @@ from .exceptions import JobCalcError, InvalidEnvString, EnvDictNotFound, \
 from .formatters import BaseFormatter, BasicFormatter, TerminalFormatter, \
     FormulaFormatter
 
-'''
-debug = bool_from_env_string(
-    os.environ.get('DEBUG', os.environ.get('JOBCALC_DEBUG', 'false'))
-)
-
-if debug is True:  # pragma: no cover
-    logging.basicConfig(
-        stream=sys.stdout,
-        level=logging.DEBUG,
-        format='%(levelname)s - (%(filename)s::%(funcName)s):msg: %(message)s'
-    )
-else:  # pragma: no cover
-    logging.basicConfig(
-        stream=sys.stdout,
-        level=logging.INFO,
-        format='%(levelname)s: %(message)s'
-    )
-
-logger = logging.getLogger(__name__)
-logger.debug('In debug mode.')
-'''
 
 __author__ = 'Michael Housh'
 __email__ = 'mhoush@houshhomeenergy.com'
@@ -56,7 +35,7 @@ __all__ = [
     'Config', 'TerminalConfig',
 
     # Core
-    'Context', 'PromptResponse', # 'ColorKey', 'DEFAULT_COLOR_KEY',
+    'Context', 'PromptResponse',  # 'ColorKey', 'DEFAULT_COLOR_KEY',
     'calculate', 'BaseCalculator', 'Calculator', 'TerminalCalculator',
 
     # Exceptions

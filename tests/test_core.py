@@ -4,7 +4,7 @@
 import pytest
 import decimal
 
-from jobcalc.types import Currency  # , DISCOUNT  # , Percentage
+from jobcalc.param_types import Currency  # , DISCOUNT  # , Percentage
 from jobcalc.exceptions import PercentageOutOfRange, InvalidFormatter, \
     HourlyRateError
 from jobcalc.utils import flatten

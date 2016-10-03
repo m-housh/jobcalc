@@ -7,7 +7,7 @@ import pytest
 # import decimal
 
 from jobcalc.exceptions import NotCallableError  # , InvalidEnvString
-from jobcalc.types import Percentage, DISCOUNT
+from jobcalc.param_types import Percentage, DISCOUNT
 # from jobcalc.config import ENV_DICT_NAMES as env
 from jobcalc.config import Config
 

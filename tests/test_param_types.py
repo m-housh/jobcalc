@@ -8,9 +8,9 @@ import decimal
 
 import click
 
-from jobcalc.types import Percentage, Currency, DeductionsType, MarginsType, \
-    DiscountsType, CostsType, check_env_dict, parse_input_value, HoursType, \
-    ConfigType
+from jobcalc.param_types import Percentage, Currency, DeductionsType, \
+    MarginsType, DiscountsType, CostsType, check_env_dict, parse_input_value, \
+    HoursType, ConfigType
 
 from jobcalc.exceptions import PercentageOutOfRange, EnvDictNotFound
 from jobcalc.config import env_strings as env

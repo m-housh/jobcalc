@@ -72,7 +72,7 @@ def dict_from_env_string(string: Union[str, dict], seperator: str=None,
     :param divider:  Divides key, value pairs.  Defaults to ``':'``.  This can
                      also be set by the environment variable
                      ``JOBCALC_DIVIDER``.
-    :param type:  A callback to use to convert all the values to a certain type.
+    :param type:  Callback to use to convert all the values to a certain type.
 
 
     Example::

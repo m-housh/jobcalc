@@ -80,7 +80,8 @@ run-all-tests: ensure-test-image ## run tox tests in docker container
 	docker run -it -v "$$PWD":/usr/src/app --rm jobcalc:test make test-all
 
 run-tests: clean ensure-dev-image ## run tests quickly inside docker container with the default Python
-	docker run -it -v "$$PWD":/usr/src/app --rm jobcalc:dev make test
+	docker run -it -v "$$PWD":/usr/src/app --rm -e PYENV_VERSION= jobcalc:dev \
+		make test
 
 coverage: ## check code coverage quickly with the default Python
 	coverage run --source jobcalc py.test

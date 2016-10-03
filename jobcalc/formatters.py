@@ -10,7 +10,7 @@ import terminaltables
 import colorclass
 
 from .utils import colorize
-from .types import Currency, Percentage
+from .param_types import Currency, Percentage
 
 # logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)

@@ -11,7 +11,8 @@ import functools
 import click
 
 from .utils import flatten, parse_input_string, colorize  # , _return_input
-from .types import Currency, Percentage, COSTS, MARGIN, DISCOUNT, DEDUCTION
+from .param_types import Currency, Percentage, COSTS, MARGIN, DISCOUNT, \
+    DEDUCTION
 from .exceptions import InvalidFormatter, HourlyRateError
 from .formatters import BaseFormatter, BasicFormatter
 from .config import Config, TerminalConfig
@@ -41,7 +42,8 @@ and the values will be unpacked in the correct order.
 
 Example::
 
-    >>> ctx = Context(subtotal='123', margin='50', discount='10', deduction='0')
+    >>> ctx = Context(subtotal='123', margin='50', discount='10',
+    ...               deduction='0')
     >>> calculate(*ctx).formatted_string()
     '$221.40'
 
@@ -137,11 +139,11 @@ class BaseCalculator(object):
                      :py:class:`Percentage`, used as the profit margin for the
                      calculation.
     :param discounts:  An item or list of items that can be converted to a
-                       :py:class:`Percentage`, used as a percentage discount for
-                       the calculation.
+                       :py:class:`Percentage`, used as a percentage discount
+                       for the calculation.
     :param deductions:  An item or list of items that can be converted to a
-                        :py:class:`Currency`, used as monetary deduction for the
-                        calculation.
+                        :py:class:`Currency`, used as monetary deduction for
+                        the calculation.
     :param ignore_margins:  A bool determining whether to ignore margins if
                             any of the items in ``costs`` are other
                             ``Calculator`` instances. Defaults to ``False``.
@@ -254,10 +256,11 @@ class BaseCalculator(object):
 
 class Calculator(BaseCalculator):
     """Extends :py:class:`BaseCalculator`.  Adds the ability to attach
-    formatters, to ``render`` a formatted output.  Adds ``hours`` and a ``rate``
-    option. The ``hours`` will be summed and multiplied by the ``rate`` and
-    added to the ``subtotal`` of the job.  Also adds the ability to pass in a
-    :py:class:`Config` instance for common configuration of a ``Calculator``.
+    formatters, to ``render`` a formatted output.  Adds ``hours`` and a
+    ``rate`` option. The ``hours`` will be summed and multiplied by the
+    ``rate`` and added to the ``subtotal`` of the job.
+    Also adds the ability to pass in a :py:class:`Config` instance for
+    common configuration of a ``Calculator``.
 
     :param formatters:  A single or iterable of :py:class:`BaseFormatter`'s to
                         format the output.
@@ -380,8 +383,8 @@ class Calculator(BaseCalculator):
 
 
         :param strict:  If ``True`` an error will be raised if ``hours`` are
-                        set on an instance, but no :py:attr:`rate` has been set.
-                        Default is ``False``
+                        set on an instance, but no :py:attr:`rate` has been
+                        set. Default is ``False``
 
         :raises HourlyRateError:  If ``strict`` is ``True`` and no hourly rate
                                   has been set.
@@ -496,9 +499,10 @@ class TerminalCalculator(Calculator):
         """Formats and returns the header shown when prompting for multiple
         values from the user.
         """
-        return "\nMultiples accepted, they can be seperated by '{}'\n\n".format(
-            self.config.prompt_seperator
-        )
+        rv = \
+            "\nMultiples accepted, they can be seperated by '{}'\n\n".format(
+                self.config.prompt_seperator)
+        return rv
 
     def _single_display_header(self) -> str:
         return '\nSingle value only.\n\n'

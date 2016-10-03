@@ -24,7 +24,7 @@ def test_env_strings():
 
 def test_Config(test_env_setup):
     config = Config()
-    assert config.debug is True
+    assert config.debug is not None
     assert config.seperator == ';'
     assert config.divider == ':'
     assert config.rate == '20'

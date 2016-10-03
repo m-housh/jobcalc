@@ -6,10 +6,10 @@ import logging
 
 import click
 
-from . import types
+from . import param_types as types
 from .core import TerminalCalculator
 from .formatters import FormulaFormatter, TerminalFormatter
-from .config import ENV_PREFIX, TerminalConfig, from_yaml
+from .config import ENV_PREFIX, TerminalConfig
 
 logger = logging.getLogger(__name__)
 
