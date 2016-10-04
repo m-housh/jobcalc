@@ -8,7 +8,7 @@ import click
 
 from . import param_types as types
 from .core import TerminalCalculator
-from .formatters import FormulaFormatter, TerminalFormatter
+from .formatters import FormulaFormatter, TerminalFormatter, BasicFormatter
 from .config import ENV_PREFIX, TerminalConfig
 
 logger = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ def main(ctx, margin, discount, rate, hours, allow_empty, config):
         # set calculator as the ctx.obj
         ctx.obj = calculator
 
-        logger.debug('config.prompt: {}'.format(config.prompt))
+        logger.debug('config.formula: {}'.format(config.formula))
 
     if ctx.invoked_subcommand is None and config.prompt is True:
         # setup our calculator object to pass to the prompt_all command.
@@ -106,6 +106,11 @@ def total(calculator, deduction, hours, rate, costs):
         calculator.prompt_for_empty()
         click.echo('\n\n')
 
+    if calculator.config.formula is True:
+        calculator.formatters.append(FormulaFormatter())
+
+    calculator.formatters.append(BasicFormatter())
+
     # default formatter just shows the total.
     click.echo(calculator.render())
 
@@ -135,21 +140,21 @@ def table(calculator, formula, deduction, hours, rate, costs):
         calculator.rate = rate
 
     config = calculator.config
-    config.formula = formula
+    if formula is True:
+        config.formula = formula
 
     if config.allow_empty is False:
         # prompt for the values that are equal to 0
         # TODO:  Add ability to pass ``strict`` parameter to
         #        ``prompt_for_empty``
         calculator.prompt_for_empty()
-        click.echo('\n\n')
 
     calculator.formatters.append(TerminalFormatter())
 
     if config.formula is True:
         calculator.formatters.append(FormulaFormatter())
 
-    click.echo(calculator.render())
+    click.echo('\n\n' + calculator.render())
 
 
 @main.command()
@@ -182,9 +187,8 @@ def formula(calculator, deduction, hours, rate, table, costs):
 
     if calculator.config.allow_empty is False:
         calculator.prompt_for_empty()
-        click.echo('\n\n')
 
-    click.echo(calculator.render())
+    click.echo('\n\n' + calculator.render())
 
 
 @main.command('prompt-all')
@@ -201,7 +205,7 @@ def prompt_all(calculator, table, formula):
     if table is True:
         calculator.formatters.append(TerminalFormatter())
 
-    if formula is True:
+    if formula is True or calculator.config.formula is True:
         calculator.formatters.append(FormulaFormatter())
 
     click.echo('\n\n')

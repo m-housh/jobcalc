@@ -55,6 +55,13 @@ def test_total(runner):
     assert result.exception is None
     assert '$1,662.20' in result.output
 
+    os.environ['JOBCALC_FORMULA'] = 'true'
+    result = runner.invoke(main, ['--margin', '50', '--hours', '10', '--rate',
+                                  '20', 'total', '123', '456'])
+    assert result.exception is None
+    assert 'FORMULA' in result.output
+    del(os.environ['JOBCALC_FORMULA'])
+
 
 def test_total_with_prompt(runner):
     # default_hours set in test_env_setup is '2'.

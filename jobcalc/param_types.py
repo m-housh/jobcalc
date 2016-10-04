@@ -146,25 +146,32 @@ def check_env_dict(env_var: str=None, strict: bool=None):
             return wrapped(*args, **kwargs)
 
         if isinstance(args[0], str):
+            arg = args[0]
+
             # if only a single value was passed in
-            if args[0] == '0':
+            if arg == '0':
                 # check for a default key in the env_dict.
-                value = env_dict.get('default', args[0])
+                value = env_dict.get('default', arg)
                 # make sure that 'default' is not mapped to another
                 # key in the env_dict
                 return env_dict.get(value, value)
 
-            return env_dict.get(args[0], args[0])
+            return env_dict.get(arg, arg)
 
         # if multiple values need to be checked, a list, tuple, etc.
         # check for the values, either returning the value for the key in the
         # env_dict, or the value.
         true_values = tuple(map(lambda x: env_dict.get(x, x), iter(args[0])))
+        logger.debug('true_values: {}'.format(true_values))
 
         # if only parsed a single item, return a single item,
         # instead of a tuple
         if len(true_values) == 1:
             true_values = true_values[0]
+
+        if true_values == '0':
+            value = env_dict.get('default', true_values)
+            true_values = env_dict.get(value, value)
 
         # reset args, to be passed along.
         newargs = (true_values,) + args[1:]
@@ -359,6 +366,7 @@ class BasePercentageType(click.ParamType):
         :param ctx:  The command line context.
 
         """
+        logger.debug('converting: {} to Percentage(s).'.format(value))
         if hasattr(value, '__iter__') and len(value) == 1:
             value = value[0]
 

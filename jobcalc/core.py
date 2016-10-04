@@ -594,7 +594,7 @@ class TerminalCalculator(Calculator):
     :param display_single_header:  If ``True`` then show the single value
                                    header.
 
-    :rtype:  PromptResponse
+    :rtype:  :py:class:`.PromptResponse`
     """
 
     prompt_for_margin = functools.partialmethod(_prompt_for,
@@ -610,7 +610,7 @@ class TerminalCalculator(Calculator):
     :param display_single_header:  If ``True`` then show the single value
                                    header.
 
-    :rtype:  PromptResponse
+    :rtype:  :py:class:`.PromptResponse`
     """
 
     prompt_for_discount = functools.partialmethod(_prompt_for,
@@ -626,7 +626,7 @@ class TerminalCalculator(Calculator):
     :param display_single_header:  If ``True`` then show the single value
                                    header.
 
-    :rtype:  PromptResponse
+    :rtype:  :py:class:`.PromptResponse`
     """
 
     prompt_for_deduction = functools.partialmethod(_prompt_for,
@@ -643,7 +643,7 @@ class TerminalCalculator(Calculator):
     :param display_single_header:  If ``True`` then show the single value
                                    header.
 
-    :rtype:  PromptResponse
+    :rtype:  :py:class:`.PromptResponse`
     """
 
     prompt_for_hours = functools.partialmethod(_prompt_for,
@@ -659,7 +659,7 @@ class TerminalCalculator(Calculator):
     :param display_single_header:  If ``True`` then show the single value
                                    header.
 
-    :rtype:  PromptResponse
+    :rtype:  :py:class:`.PromptResponse`
     """
 
     prompt_for_rate = functools.partialmethod(_prompt_for,
@@ -676,7 +676,8 @@ class TerminalCalculator(Calculator):
     :param display_single_header:  If ``True`` then show the single value
                                    header.
 
-    :rtype:  PromptResponse
+    :rtype:  :py:class:`.PromptResponse`
+
     """
 
     def key_for_prompt(self, prompt: str) -> str:

@@ -61,6 +61,10 @@ a calculation.
 
 
 class BaseFormatter(object):
+    """All formatter's should sub-class this object, and override the
+    :py:meth:`render` method.
+
+    """
 
     @staticmethod
     def colorize(item: Any, color: str) -> colorclass.Color:
