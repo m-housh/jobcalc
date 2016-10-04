@@ -31,7 +31,7 @@ setup_requirements = [
 
 setup(
     name='jobcalc',
-    version='0.1.0',
+    version='0.1.1',
     description="Job calculator utilities and command line application.",
     long_description=readme + '\n\n' + history,
     author="Michael Housh",
