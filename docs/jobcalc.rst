@@ -44,10 +44,10 @@ jobcalc.formatters module
     :undoc-members:
     :show-inheritance:
 
-jobcalc.types module
---------------------
+jobcalc.param_types module
+--------------------------
 
-.. automodule:: jobcalc.types
+.. automodule:: jobcalc.param_types
     :members:
     :undoc-members:
     :show-inheritance:
