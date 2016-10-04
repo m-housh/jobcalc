@@ -127,39 +127,39 @@ The following items can be imported from the ``jobcalc.formatters`` module.
 
 .. autodata:: jobcalc.formatters.DEFAULT_COLORS
 
-Types
-------
+Param Types
+-----------
 
-The following items can be imported from ``jobcalc.types`` module.
+The following items can be imported from ``jobcalc.param_types`` module.
 
-.. autoclass:: jobcalc.types.Percentage
+.. autoclass:: jobcalc.param_types.Percentage
     :members:
 
-.. autoclass:: jobcalc.types.Currency
+.. autoclass:: jobcalc.param_types.Currency
     :members:
 
-.. autoclass:: jobcalc.types.BaseCurrencyType
+.. autoclass:: jobcalc.param_types.BaseCurrencyType
     :members:
 
-.. autoclass:: jobcalc.types.BasePercentageType
+.. autoclass:: jobcalc.param_types.BasePercentageType
     :members:
 
-.. autoclass:: jobcalc.types.DeductionsType
+.. autoclass:: jobcalc.param_types.DeductionsType
     :members:
 
-.. autoclass:: jobcalc.types.MarginsType
+.. autoclass:: jobcalc.param_types.MarginsType
     :members:
 
-.. autoclass:: jobcalc.types.DiscountsType
+.. autoclass:: jobcalc.param_types.DiscountsType
     :members:
 
-.. autoclass:: jobcalc.types.CostsType
+.. autoclass:: jobcalc.param_types.CostsType
     :members:
 
-.. autoclass:: jobcalc.types.HoursType
+.. autoclass:: jobcalc.param_types.HoursType
     :members:
 
-.. autofunction:: jobcalc.types.parse_input_value
+.. autofunction:: jobcalc.param_types.parse_input_value
 
-.. autofunction:: jobcalc.types.check_env_dict
+.. autofunction:: jobcalc.param_types.check_env_dict
 
