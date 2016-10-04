@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
+
 import pytest
 import decimal
 
@@ -35,7 +37,12 @@ class Test_BaseCalculator(object):
 
     @classmethod
     def setup_class(cls):
+        os.environ['DEBUG'] = 'true'
         cls.calc = BaseCalculator(['123', '456'], '50', '10', '100')
+
+    @classmethod
+    def teardown_class(cls):
+        del(os.environ['DEBUG'])
 
     def test_attributes(self):
         assert list(flatten(self.calc.costs)) == ['123', '456']
@@ -85,6 +92,8 @@ class Test_Calculator(object):
 
     @classmethod
     def setup_class(cls):
+        os.environ['DEBUG'] = 'true'
+
         cls.calc = Calculator(
             costs=['123', '456'],
             margins='50',
@@ -94,6 +103,10 @@ class Test_Calculator(object):
             rate='20',
             formatters=BasicFormatter
         )
+
+    @classmethod
+    def teardown_class(cls):
+        del(os.environ['DEBUG'])
 
     def test_attributes(self):
         calc = self.calc
@@ -201,7 +214,12 @@ class Test_TerminalCalculator(object):
 
     @classmethod
     def setup_class(cls):
+        os.environ['DEBUG'] = 'true'
         cls.calc = TerminalCalculator()
+
+    @classmethod
+    def teardown_class(cls):
+        del(os.environ['DEBUG'])
 
     def test_private_prompt_for_fails(self):
         with pytest.raises(AttributeError):
