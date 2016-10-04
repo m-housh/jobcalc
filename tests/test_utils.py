@@ -63,49 +63,6 @@ def test_dict_from_env_string():
     envstr = 'key1:1.0;key2:2'
     assert dict_from_env_string(envstr, type=float) == float_dict
 
-'''
-def test_get_env_var():
-    assert get_env_var('invalid', {}) == {}
-    assert get_env_var('invalid', default='default') == 'default'
-    os.environ['JOBCALC_WITH_PREFIX'] = 'prefix'
-    os.environ['NO_PREFIX'] = 'no_prefix'
-    os.environ['lower'] = 'lower'
-    os.environ['INT'] = '12'
-
-    assert get_env_var('_with_prefix') == 'prefix'
-    assert get_env_var('with_prefix') == 'prefix'
-    assert get_env_var('WITH_PREFIX') == 'prefix'
-    # ensure still works if you have use_prefix ``True`` and the prefix
-    # is alread in the string.
-    assert get_env_var('JOBCALC_WITH_PREFIX', use_prefix=True) == 'prefix'
-    assert get_env_var('with_prefix', ensure_upper=False) == None
-    assert get_env_var('with_prefix', use_prefix=False) == None
-    assert get_env_var('no_prefix', use_prefix=False) == 'no_prefix'
-    assert get_env_var('lower', use_prefix=False, ensure_upper=True) == None
-    assert get_env_var('lower', use_prefix=False,
-                       ensure_upper=False) == 'lower'
-
-    assert get_env_var('INT', use_prefix=False, callback=int) == 12
-    assert isinstance(get_env_var('INT', use_prefix=False, callback=int), int)
-
-    with pytest.raises(TypeError):
-        get_env_var('INT', use_prefix=False, callback='not callable')
-
-def test_check_in_env_dict(test_env_setup):
-
-    assert check_in_env_dict('deluxe', env.DISCOUNTS) == '10'
-    # should return the value if not in the dict
-    assert check_in_env_dict('invalid', env.DISCOUNTS) == 'invalid'
-    assert check_in_env_dict('deluxe', env.DISCOUNTS, float) == 10.0
-
-    with pytest.raises(NotCallableError):
-        assert check_in_env_dict('deluxe', env.DEDUCTIONS, 'not callable')
-
-    # invalid env dict name returns the value
-    assert check_in_env_dict('invalid', 'invalid') == 'invalid'
-
-'''
-
 
 def test_flatten():
     mylist = [1, 2, [3, 4], [5, [6, 7], [8, 9]]]

@@ -9,7 +9,9 @@ jobcalc
 .. image:: https://coveralls.io/repos/github/m-housh/jobcalc/badge.svg?branch=master
         :target: https://coveralls.io/github/m-housh/jobcalc?branch=master
 
-Job calculator utilities and command line application.
+Job calculator utilities and command line application.  Currently only
+supports python 3.5 or above, because of the use of type-hints.
+
 
 
 * Free software: MIT license
@@ -19,7 +21,20 @@ Job calculator utilities and command line application.
 Features
 --------
 
-* TODO
+* Configurable calculations for job costing.
+* Command Line Interface
+* Profit Margin calculation
+* Supports Percentage Discounts
+* Supports Hours and Hourly rate calculation's
+* Supports Monetary Deductions
+
+Todo's
+------
+
+* Work on finalizing the docs.
+* Add more examples.
+* Add Docker documentation.
+* Add option to output to a file.
 
 Credits
 ---------

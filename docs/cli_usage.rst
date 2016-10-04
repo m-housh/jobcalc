@@ -68,6 +68,9 @@ before any sub-commands.  See `Basic Usage`_, for more details.
 * -r / --rate  
     The hourly rate to be used for the job.  This is a single value only.
 
+* -c / --config
+    Path to a yaml file to use as the config for a calculator.
+
 To avoid having to use the full option name the following options can be set
 after the sub-command.
 

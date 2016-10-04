@@ -1,0 +1,8 @@
+discounts:
+  standard: 5
+  deluxe: 10
+  premium: 15
+  default: deluxe
+rate: 20
+formula: true
+allow_empty: true
