@@ -24,7 +24,7 @@ job costs, using any combination of the following items.
 This project started one weekend, as I thought that I wish I had a simple, 
 elegant, and flexible way to quickly calculate a job cost while still in
 a terminal session, it grew from there to be extensible through custom
-``Formatter``'s to be able to be used in more than just a command line
+**Formatter's** to be able to be used in more than just a command line
 application
 
 Because of the use of type-hints, **python 3.5** or above are the only supported
