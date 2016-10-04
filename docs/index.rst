@@ -12,6 +12,11 @@ Welcome to jobcalc's documentation!
 .. image:: https://coveralls.io/repos/github/m-housh/jobcalc/badge.svg?branch=master
         :target: https://coveralls.io/github/m-housh/jobcalc?branch=master
 
+.. image:: https://readthedocs.org/projects/jobcalc/badge/?version=latest
+        :target: http://jobcalc.readthedocs.io/en/latest/?badge=latest
+        :alt: Documentation Status
+
+
 
 **jobcalc** aims to be a simple, but effective way at quickly calculating
 job costs, using any combination of the following items.
@@ -34,7 +39,7 @@ are handy.
 
 * Free software: MIT license
 * Documentation: https://jobcalc.readthedocs.io.
-
+* Repo: https://github.com/m-housh/jobcalc
 
 Contents:
 

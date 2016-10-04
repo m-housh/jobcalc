@@ -9,6 +9,10 @@ jobcalc
 .. image:: https://coveralls.io/repos/github/m-housh/jobcalc/badge.svg?branch=master
         :target: https://coveralls.io/github/m-housh/jobcalc?branch=master
 
+.. image:: https://readthedocs.org/projects/jobcalc/badge/?version=latest
+        :target: http://jobcalc.readthedocs.io/en/latest/?badge=latest
+        :alt: Documentation Status
+
 Job calculator utilities and command line application.  Currently only
 supports python 3.5 or above, because of the use of type-hints.
 
@@ -16,6 +20,7 @@ supports python 3.5 or above, because of the use of type-hints.
 
 * Free software: MIT license
 * Documentation: https://jobcalc.readthedocs.io.
+* Repo: https://github.com/m-housh/jobcalc
 
 
 Features
