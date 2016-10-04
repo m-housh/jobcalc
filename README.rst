@@ -3,12 +3,11 @@ jobcalc
 ===============================
 
 
-.. image:: https://img.shields.io/pypi/v/jobcalc.svg
-        :target: https://pypi.python.org/pypi/jobcalc
-
 .. image:: https://img.shields.io/travis/m-housh/jobcalc.svg
         :target: https://travis-ci.org/m-housh/jobcalc
 
+.. image:: https://coveralls.io/repos/github/m-housh/jobcalc/badge.svg?branch=master
+        :target: https://coveralls.io/github/m-housh/jobcalc?branch=master
 
 Job calculator utilities and command line application.
 
